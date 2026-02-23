@@ -4,6 +4,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:claimscope_clean/inspection_report_model.dart';
 
+//ignore: Unused_import
+import 'package:archive/archive.dart';
+
 class PdfService {
   static Future<Map<String, File>> generateReports(InspectionReport report) async {
     final pdfTech = pw.Document();
@@ -316,14 +319,35 @@ pw.SizedBox(height: 10),
       );
     }
      // Guardar archivos PDF
-    final dir = await getApplicationDocumentsDirectory();
-    final techFile = File("${dir.path}/Tech_Report.pdf");
-    final photoFile = File("${dir.path}/Photo_Report.pdf");
+String sanitizeFilename(String input) {
+  var s = input.trim();
+  if (s.isEmpty) return 'UNKNOWN';
+  s = s.replaceAll(RegExp(r'[\/\\\:\*\?\"\<\>\|]'), '');
+  s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return s.isEmpty ? 'UNKNOWN' : s;
+}
 
-    await techFile.writeAsBytes(await pdfTech.save());
-    await photoFile.writeAsBytes(await pdfPhotos.save());
+// Guardar archivos PDF
+final dir = await getApplicationDocumentsDirectory();
 
-    return {'tech': techFile, 'photos': photoFile};
+final claim = report.claimNumber.trim().isEmpty
+    ? 'NOCLAIM'
+    : sanitizeFilename(report.claimNumber);
+
+final insured = report.clientName.trim().isEmpty
+    ? 'UNKNOWN'
+    : sanitizeFilename(report.clientName);
+
+final techName = '$claim - $insured - Inspection Report.pdf';
+final photoName = '$claim - $insured - Inspection Photos.pdf';
+
+final techFile = File("${dir.path}/$techName");
+final photoFile = File("${dir.path}/$photoName");
+
+await techFile.writeAsBytes(await pdfTech.save());
+await photoFile.writeAsBytes(await pdfPhotos.save());
+
+return {'tech': techFile, 'photos': photoFile};
   }
 
   static pw.Widget _buildHeader(String title) {
