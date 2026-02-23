@@ -341,8 +341,8 @@ final insured = report.clientName.trim().isEmpty
 final techName = '$claim - $insured - Inspection Report.pdf';
 final photoName = '$claim - $insured - Inspection Photos.pdf';
 
-final techFile = File("${dir.path}/$techName");
-final photoFile = File("${dir.path}/$photoName");
+final techFile = File('${dir.path}/$techName');
+final photoFile = File('${dir.path}/$photoName');
 
 await techFile.writeAsBytes(await pdfTech.save());
 await photoFile.writeAsBytes(await pdfPhotos.save());
