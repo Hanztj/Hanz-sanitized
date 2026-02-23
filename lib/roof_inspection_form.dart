@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:claimscope_clean/services/stripe_service.dart';
+import 'package:claimscope_clean/Services/stripe_service.dart';
 import 'package:claimscope_clean/Services/pdf_service.dart';
 //firebase imports here
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,10 +9,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:claimscope_clean/Services/email_service.dart';
 import 'package:claimscope_clean/inspection_report_model.dart';
-//ignore unused imports for now, will be used in the future when implementing the functions
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:claimscope_clean/screens/my_reports_screen.dart';
+import 'package:archive/archive.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
 enum FacetOrientation {
   north,
   south,
@@ -62,7 +65,42 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
                   _confirmRushAndSendToHfByEmail(techPdf, photoPdf);
                 },
               ),
-              const Divider(),
+                  
+                       const Divider(),
+                     ListTile(
+                     leading: const Icon(Icons.folder_zip),
+                     title: const Text('Download ZIP (labeled photos)'),
+                     subtitle: const Text('Creates a ZIP with labeled photos (excludes gallery images).'),
+                      onTap: () async {
+                      Navigator.of(dialogContext).pop();
+
+                      final messenger = ScaffoldMessenger.of(context);
+                      
+                      final zip = await _generateLabeledPhotosZip();
+                        if (!mounted) return;
+                      await Share.shareXFiles([XFile(zip.path)], text: 'Inspection Photos ZIP');
+                     try {
+                     final zip = await _generateLabeledPhotosZip();
+                     if (!mounted) return;
+
+                     messenger.showSnackBar(
+                     SnackBar(content: Text('ZIP created: ${zip.path}')),
+                      );
+                      } catch (e) {
+                      if (!mounted) return;
+
+                    messenger.showSnackBar(
+                      SnackBar(
+                     content: Text('Error creating ZIP: $e'),
+                     backgroundColor: Colors.red,
+                    ),
+                    );
+                     }
+                      },
+                    ),
+                      
+                                            
+               const Divider(),
               if (widget.plan != 'premium')
                 ListTile(
                   leading: const Icon(Icons.send_to_mobile),
@@ -391,6 +429,73 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
 
   return true;
 }
+ 
+ String _sanitizePhotoBaseName(String label) {
+  var s = label.trim();
+
+  // Excluir sufijos comunes para que "extra/additional" se agrupe con el nombre base
+  s = s.replaceAll(RegExp(r'\bextra photo\b', caseSensitive: false), '');
+  s = s.replaceAll(RegExp(r'\badditional photo\b', caseSensitive: false), '');
+  s = s.replaceAll(RegExp(r'\badditional\b', caseSensitive: false), '');
+
+  s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  // Solo caracteres seguros para nombre de archivo
+  s = s.replaceAll(RegExp(r'[^A-Za-z0-9\-\s_]'), '');
+  s = s.replaceAll(' ', '_');
+
+  if (s.isEmpty) return 'Image';
+  return s;
+}
+
+String _sanitizeFilename(String input) {
+  var s = input.trim();
+  if (s.isEmpty) return 'UNKNOWN';
+  s = s.replaceAll(RegExp(r'[\/\\\:\*\?\"\<\>\|]'), '');
+  s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return s.isEmpty ? 'UNKNOWN' : s;
+}
+
+Future<File> _generateLabeledPhotosZip() async {
+  // Excluir imágenes de galería (se agregan como label 'User Image')
+  final items = widget.report.photoReportItems.where((p) {
+    return p.label.trim() != 'User Image';
+  }).toList();
+
+  final counts = <String, int>{};
+  final archive = Archive();
+
+  for (final item in items) {
+    final base = _sanitizePhotoBaseName(item.label);
+    final n = (counts[base] ?? 0) + 1;
+    counts[base] = n;
+
+    final filename = '${base}_Image$n.jpg';
+    final bytes = await item.file.readAsBytes();
+
+    archive.addFile(ArchiveFile(filename, bytes.length, bytes));
+  }
+
+  final zipBytes = ZipEncoder().encode(archive);
+  if (zipBytes == null) {
+    throw Exception('Could not generate zip.');
+  }
+
+  final claim = widget.report.claimNumber.trim().isEmpty
+      ? 'NOCLAIM'
+      : _sanitizeFilename(widget.report.claimNumber);
+
+  final insured = widget.report.clientName.trim().isEmpty
+      ? 'UNKNOWN'
+      : _sanitizeFilename(widget.report.clientName);
+
+  final dir = await getApplicationDocumentsDirectory();
+  final zipFile = File('${dir.path}/$claim - $insured - Inspection Photos (ZIP).zip');
+
+  await zipFile.writeAsBytes(zipBytes, flush: true);
+  return zipFile;
+}
+ 
  // Solo Premium+Extra : preguntar si quiere almacenar en la nube (sin cobro HF)
 
 Future<bool> _askStoreReportInCloud() async {
