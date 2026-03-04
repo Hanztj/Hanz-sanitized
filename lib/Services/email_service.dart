@@ -26,6 +26,8 @@ class EmailService {
 
       String techUrl = await techUpload.ref.getDownloadURL();
       String photoUrl = await photoUpload.ref.getDownloadURL();
+      final techFilename = techPdf.uri.pathSegments.last;
+      final photoFilename = photoPdf.uri.pathSegments.last;
 
       // 2. Llamar a la Cloud Function pasando las URLs
       final HttpsCallable callable = FirebaseFunctions.instance
@@ -35,6 +37,8 @@ class EmailService {
         'toEmails': toEmails,
         'techPdfUrl': techUrl,
         'photoPdfUrl': photoUrl,
+        'techFilename': techFilename,
+        'photoFilename': photoFilename
       });
     } catch (e) {
       throw Exception("Error en EmailService: $e");
