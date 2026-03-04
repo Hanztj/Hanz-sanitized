@@ -4,9 +4,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:claimscope_clean/inspection_report_model.dart';
 
-//ignore: Unused_import
-import 'package:archive/archive.dart';
-
 class PdfService {
   static Future<Map<String, File>> generateReports(InspectionReport report) async {
     final pdfTech = pw.Document();
