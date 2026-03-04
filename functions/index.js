@@ -14,18 +14,18 @@ const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const webhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 const priceBasic = defineString("STRIPE_PRICE_BASIC", {
-    default: "price_placeholder_basic"
+    default: "price_1SXPDkIV8TkU9SxHb9qzNc4R"
 });
 const pricePremium = defineString("STRIPE_PRICE_PREMIUM", {
-    default: "price_placeholder_premium"
+    default: "price_1SXPEDIV8TkU9SxHEMLdOOPO"
 });
 
 // Configuración de Nodemailer (Cartero Central)
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "your-email@example.com", // Tu correo de Gmail
-        pass: "REDACTED", // Tu App Password de 16 letras
+        user: "soporte.claimscope@gmail.com",
+        pass: "jbqjyvsozmwxguuv", // Tu App Password de 16 letras
     },
 });
 
@@ -58,7 +58,7 @@ exports.stripeWebhook = onRequest(
     const photoPdfUrl = session.metadata.photoPdfUrl;
     const userEmail = session.metadata.userEmail;
 
-    const toEmail = 'orders@example.com'; // Email fijo para recibir notificaciones de pedidos
+    const toEmail = 'contact@hfestimates.com'; // Email fijo para recibir notificaciones de pedidos
 
     const clientName = session.metadata.clientName || "N/A";
     const claimNumber = session.metadata.claimNumber || "N/A";
@@ -94,15 +94,15 @@ exports.stripeWebhook = onRequest(
     ].join("\n");
 
 const mailOptions = {
-  from: '"ClaimScope Support" <"your-email@example.com">',
+  from: '"ClaimScope Support" <soporte.claimscope@gmail.com>',
   to: toEmail,
   cc: userEmail || undefined, // Enviar copia al cliente
   subject: "New HF Estimates Order - Roof Inspection Report",
   text: body,
-  attachments: [
-    { filename: "Technical_Report.pdf", path: techPdfUrl },
-    { filename: "Photo_Report.pdf", path: photoPdfUrl }
-  ]
+attachments: [
+  { filename: techFilename || "Inspection Report.pdf", path: techPdfUrl },
+  { filename: photoFilename || "Inspection Photos.pdf", path: photoPdfUrl }
+]
 };
       
     try {
@@ -155,9 +155,9 @@ if (session?.metadata?.kind === "hf_estimate_xactimate") {
   ].join("\n");
 
   const mailOptions = {
-    from: '"ClaimScope Support" <"your-email@example.com">',
+    from: '"ClaimScope Support" <soporte.claimscope@gmail.com>',
     to: userEmail,
-    cc: 'orders@example.com', // Enviar copia al equipo de operaciones
+    cc: "contact@hfestimates.com",
     subject: "HF Estimates Order Received (Xactimate Assignment - POR IMPLEMENTAR)",
     text: body,
     attachments: [
@@ -423,7 +423,7 @@ exports.sendInspectionEmail = onCall(async (request) => {
         throw new HttpsError("unauthenticated", "Debe iniciar sesión.");
     }
 
-    const { toEmails, techPdfUrl, photoPdfUrl } = request.data;
+    const { toEmails, techPdfUrl, photoPdfUrl, techFilename, photoFilename } = request.data;
     if (!techPdfUrl || !photoPdfUrl) {
   throw new HttpsError("invalid-argument", "Missing PDF URLs.");
 }
@@ -440,14 +440,13 @@ if (cleanToEmails.length === 0) {
 console.log(`Sending report to: ${cleanToEmails.join(", ")}`);
 
 const mailOptions = { 
-  from: '"ClaimScope Support" <"your-email@example.com">',
+  from: '"ClaimScope Support" <soporte.claimscope@gmail.com>',
   to: cleanToEmails.join(","),
   subject: "Your Roof Inspection Report 🚀",
   text: "Attached are your requested inspection reports.",
   attachments: [
-    { filename: "Technical_Report.pdf", path: techPdfUrl }, 
-    { filename: "Photo_Report.pdf", path: photoPdfUrl }
-  ]
+    { filename: "techFilename ", path: techPdfUrl, }, 
+    { filename: "photoFilename ", path: photoPdfUrl, },]
 };
     try {
         const info = await transporter.sendMail(mailOptions);
