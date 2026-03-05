@@ -13,6 +13,8 @@ dependencies:
    sdk: flutter
   flutter_localizations:
    sdk: flutter
+  archive: ^3.6.1
+  share_plus: ^10.1.0 
   cupertino_icons: ^1.0.8
   intl: ^0.20.2
   vector_math: ^2.1.4
