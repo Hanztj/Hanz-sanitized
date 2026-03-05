@@ -67,6 +67,7 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
               ),
                   
                        const Divider(),
+                        if (widget.plan == 'premium')
                      ListTile(
                      leading: const Icon(Icons.folder_zip),
                      title: const Text('Download ZIP (labeled photos)'),
@@ -566,8 +567,11 @@ Future<void> _storeReportInCloud(File techPdf, File photoPdf) async {
 
     final reportId = reportRef.id;
 
-    final techPath = 'user_reports/${user.uid}/$reportId/Tech_Report.pdf';
-    final photoPath = 'user_reports/${user.uid}/$reportId/Photo_Report.pdf';
+        final techFilename = techPdf.uri.pathSegments.last;
+    final photoFilename = photoPdf.uri.pathSegments.last;
+
+    final techPath = 'user_reports/${user.uid}/$reportId/$techFilename';
+    final photoPath = 'user_reports/${user.uid}/$reportId/$photoFilename';
 
     await storage.ref(techPath).putFile(techPdf);
     await storage.ref(photoPath).putFile(photoPdf);
