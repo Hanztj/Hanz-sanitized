@@ -445,8 +445,9 @@ const mailOptions = {
   subject: "Your Roof Inspection Report 🚀",
   text: "Attached are your requested inspection reports.",
   attachments: [
-    { filename: "techFilename ", path: techPdfUrl, }, 
-    { filename: "photoFilename ", path: photoPdfUrl, },]
+    { filename: techFilename, path: techPdfUrl }, 
+    { filename: photoFilename, path: photoPdfUrl }
+  ]
 };
     try {
         const info = await transporter.sendMail(mailOptions);
