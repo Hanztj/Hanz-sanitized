@@ -855,7 +855,7 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
       .length;
     return '${orientation.name.substring(0, 1).toUpperCase()}'
       '${orientation.name.substring(1)}-${existingFacetsOfOrientation + 1}';
-   }
+         }
     
      void _addNextFacet() {
       
@@ -1692,8 +1692,7 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
                   keyboardType: TextInputType.number,
                   onSaved: (val) => numLayers = int.tryParse(val ?? '0') ?? 0,
                   validator: (v) => v!.isEmpty ? 'Required' : null,
-                  
-                ),
+           ),
                if (['Shingles'].contains(roofCoverType))
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Estimated Roof Age'),
@@ -2528,13 +2527,70 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
   ),
 
  const SizedBox(height: 40),
-                  ],
-                ),
-            ],
-          ),
-        ),
+                  ],// final children of Column
+                ),// final single child scroll view
+              ], // final children of Column
+          ),// final Scaffold body
+        ),// final Scaffold
+      ),// final Form
+    );// final return of build
+  }// final build method
+
+Widget _requiredLabel(String text, {required bool requiredField}) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: Theme.of(context).inputDecorationTheme.labelStyle ?? 
+               TextStyle(color: Theme.of(context).hintColor, fontSize: 16),
+        children: [
+          if (requiredField)
+            const TextSpan(
+              text: ' *',
+              style: TextStyle(
+                color: Colors.orange, 
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+        ],
       ),
     );
   }
+
+  void _showRequiredFieldsWarning() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please fill out the required fields.'),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Widget buildDropdown(
+    String label,
+    List<String> options,
+    String? value,
+    Function(String?) onChanged, {
+    bool requiredField = !false,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        label: _requiredLabel(label, requiredField: requiredField),
+      ),
+      validator: requiredField
+          ? (v) => (v == null || v.isEmpty) ? 'Required' : null
+          : null,
+      items: options
+          .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+          .toList(),
+    );
+  }
+
 }
+
+
+
 
