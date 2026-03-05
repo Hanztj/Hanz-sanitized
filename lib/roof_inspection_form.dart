@@ -1054,20 +1054,16 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
       }
     }
   }
-    if (_formKey.currentState!.validate()) {
+    
+  final isValid = _formKey.currentState!.validate();
+   debugPrint('Roof form validate() = $isValid');
 
-       bool isValid = _formKey.currentState!.validate();
-       debugPrint('Roof form validate() = $isValid');
+if (!isValid) {
+  _showRequiredFieldsWarning(); // o reemplaza por el SnackBar que ya tienes
+  return;
+}
 
-  if (!isValid) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please correct errors before submitting.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-      }
-      _formKey.currentState!.save();
+_formKey.currentState!.save();
       _saveCurrentFacetData(); // Guardar faceta actual en la lista
           // Sincronizar campos simples con el modelo
     widget.report.numLayers = numLayers;
@@ -1119,7 +1115,7 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
           SnackBar(content: Text('Error generating PDFs: $e')),
         );
       }
-    }
+    
   }
   // --- LOGICA DE FACETAS (Mantenida para funcionamiento) ---
   void _initializeCurrentFacet() {
@@ -1323,7 +1319,7 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
     };
   }
 
-  Widget buildDropdown(String label, List<String> options, String? value, Function(String?) onChanged) {
+  Widget buildDropdownOne(String label, List<String> options, String? value, Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
       value: value,
       onChanged: onChanged,
@@ -2572,11 +2568,11 @@ Widget _requiredLabel(String text, {required bool requiredField}) {
     List<String> options,
     String? value,
     Function(String?) onChanged, {
-    bool requiredField = !false,
+    bool requiredField = false,
   }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      onChanged: onChanged,
+return DropdownButtonFormField<String>(
+  initialValue: value,
+  onChanged: onChanged,
       decoration: InputDecoration(
         label: _requiredLabel(label, requiredField: requiredField),
       ),
@@ -2588,7 +2584,6 @@ Widget _requiredLabel(String text, {required bool requiredField}) {
           .toList(),
     );
   }
-
 }
 
 
