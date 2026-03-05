@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:claimscope_clean/Services/stripe_service.dart';
+import 'package:claimscope_clean/services/stripe_service.dart';
 import 'package:claimscope_clean/Services/pdf_service.dart';
 //firebase imports here
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,12 +9,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:claimscope_clean/Services/email_service.dart';
 import 'package:claimscope_clean/inspection_report_model.dart';
+//ignore unused imports for now, will be used in the future when implementing the functions
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:claimscope_clean/screens/my_reports_screen.dart';
-import 'package:archive/archive.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:archive/archive.dart'; // Para ArchiveFile y ZipEncoder
+import 'package:path_provider/path_provider.dart'; // Para getApplicationDocumentsDirectory
+import 'package:share_plus/share_plus.dart'; // Para Share y XFile
+
 
 enum FacetOrientation {
   north,
@@ -51,9 +53,8 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
         content: SingleChildScrollView(
           child: ListBody(
             children: <Widget>[
-              // Opción 1: Enviar a su propio correo (Basic & Premium) – sin cobro HF
-              
-               // Opciones HF Estimates (Basic & Premium) – aquí SÍ habrá cobro
+                            
+               //Option 1: Send to HF Estimates via email (Basic and Premium) – this option WILL charge a fee
               ListTile(
                 leading: const Icon(Icons.business),
                 title: const Text('Send to HF Estimates by email'),
@@ -65,8 +66,59 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
                   _confirmRushAndSendToHfByEmail(techPdf, photoPdf);
                 },
               ),
-                  
-                       const Divider(),
+
+              //Option 2 send to registered email (Basic and Premium) – this option is free
+
+              ListTile(
+                leading: const Icon(Icons.email),
+                title: const Text('1) Send to my email'),
+                subtitle: const Text(
+                  'Receive the PDF report(s) in your registered email.',
+                ),
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                  _sendReportViaEmail(techPdf, photoPdf);
+                },
+              ),
+
+                 // Additional options for Premium users
+
+              const Divider(),
+              if (widget.plan == 'premium') ...[
+                // sent to custom email (without HF fee)
+                ListTile(
+                  leading: const Icon(Icons.email_outlined),
+                  title: const Text('2) Send to another email'),
+                  subtitle: const Text(
+                    'Send the reports to any email address.',
+                  ),
+                  onTap: () {
+                    Navigator.of(dialogContext).pop();
+                    _sendReportToCustomEmail(techPdf, photoPdf);
+                  },
+                ),
+
+                // Store in Cloud (without HF fee)
+
+                  const Divider(),
+                  if (widget.plan == 'premium')
+                ListTile(
+                  leading: const Icon(Icons.cloud_upload),
+                  title: const Text(
+                    'Store in Cloud',
+                  ),
+                  subtitle: const Text(
+                    'Save a copy of the report in your account (Cloud storage).',
+                  ),
+                  onTap: () async {
+                    Navigator.of(dialogContext).pop();
+                    await _storeReportInCloud(techPdf, photoPdf);
+                  },
+                ),
+             
+                   // Download ZIP with labeled photos (without HF fee)
+
+    const Divider(),
                         if (widget.plan == 'premium')
                      ListTile(
                      leading: const Icon(Icons.folder_zip),
@@ -100,89 +152,9 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
                       },
                     ),
                       
-                                            
-               const Divider(),
-              if (widget.plan != 'premium')
-                ListTile(
-                  leading: const Icon(Icons.send_to_mobile),
-                  title: const Text(
-                    'Send as Assignment via XactAnalysis to (HF Estimates)',
-                  ),
-                  subtitle: const Text(
-                    'Create a paid assignment to hfestimates@hfestimates.com via Xactimate API.',
-                  ),
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    _confirmRushAndSendToHfViaXactimate(
-                      techPdf,
-                      photoPdf,
-                    );
-                  },
-                ),
-
-              
-              ListTile(
-                leading: const Icon(Icons.email),
-                title: const Text('1) Send to my email'),
-                subtitle: const Text(
-                  'Receive the PDF report(s) in your registered email.',
-                ),
-                onTap: () {
-                  Navigator.of(dialogContext).pop();
-                  _sendReportViaEmail(techPdf, photoPdf);
-                },
-              ),
-              const Divider(),
-
-              // Opciones adicionales para Premium (plan alto)
-              if (widget.plan == 'premium') ...[
-                // Enviar a otros correos – sin cobro HF
-                ListTile(
-                  leading: const Icon(Icons.email_outlined),
-                  title: const Text('2) Send to another email'),
-                  subtitle: const Text(
-                    'Send the reports to any email address.',
-                  ),
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    _sendReportToCustomEmail(techPdf, photoPdf);
-                  },
-                ),
-
-                const Divider(),
-
-                              if (widget.plan == 'premium')
-                ListTile(
-                  leading: const Icon(Icons.account_circle),
-                  title: const Text(
-                    'Send as Assignment to my XactNet account',
-                  ),
-                  subtitle: const Text(
-                    'Assign directly to your own XactNet account via Xactimate API.',
-                  ),
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    _sendToUserXactNetAccount(techPdf, photoPdf);
-                  },
-                ),
-                  
-                  const Divider(),
-
-                  if (widget.plan == 'premium')
-                ListTile(
-                  leading: const Icon(Icons.cloud_upload),
-                  title: const Text(
-                    'Store in Cloud',
-                  ),
-                  subtitle: const Text(
-                    'Save a copy of the report in your account (Cloud storage).',
-                  ),
-                  onTap: () async {
-                    Navigator.of(dialogContext).pop();
-                    await _storeReportInCloud(techPdf, photoPdf);
-                  },
-                ),
-              ] else
+             
+              ] 
+                else
                 Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: TextButton(
@@ -191,7 +163,7 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
                  StripeService.launchCheckout('premium');
                },
                 child: Text(
-                   'Upgrade to Premium to enable cloud storage,\nadditional recipients and Xactimate integration.',
+                   'Upgrade to Premium to enable cloud storage,additional recipients and Downloadable ZIP with labeled photos',
                    textAlign: TextAlign.center,
                    style: TextStyle(
                     color: Theme.of(context).colorScheme.secondary,
@@ -372,48 +344,7 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
   );
  } 
 
- void _confirmRushAndSendToHfViaXactimate(File techPdf, File photoPdf) {
-  bool rush = false;
 
-  showDialog(
-    context: context,
-    builder: (rushDialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Rush Order? (+\$15)'),
-            content: CheckboxListTile(
-              title: const Text('Is this a rush order? (+\$15)'),
-              value: rush,
-              onChanged: (val) {
-                setState(() {
-                  rush = val ?? false;
-                });
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(rushDialogContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(rushDialogContext).pop();
-                  // Igual que antes, pero vía Xactimate:
-                  // Precio base + shed + estructura + rush + descuento plan
-                  // Luego backend/Stripe y después assignment a hfestimates@hfestimates.com
-                  _sendToHfViaXactimate(techPdf, photoPdf,
-                      rushOrder: rush);
-                },
-                child: const Text('Continue'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
- }
  // Function helper email 
   bool _isProbablyValidEmail(String value) {
   final email = value.trim();
@@ -430,7 +361,7 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
 
   return true;
 }
- 
+
  String _sanitizePhotoBaseName(String label) {
   var s = label.trim();
 
@@ -496,7 +427,7 @@ Future<File> _generateLabeledPhotosZip() async {
   await zipFile.writeAsBytes(zipBytes, flush: true);
   return zipFile;
 }
- 
+
  // Solo Premium+Extra : preguntar si quiere almacenar en la nube (sin cobro HF)
 
 Future<bool> _askStoreReportInCloud() async {
@@ -566,8 +497,7 @@ Future<void> _storeReportInCloud(File techPdf, File photoPdf) async {
         .doc(); // doc().id generado
 
     final reportId = reportRef.id;
-
-        final techFilename = techPdf.uri.pathSegments.last;
+    final techFilename = techPdf.uri.pathSegments.last;
     final photoFilename = photoPdf.uri.pathSegments.last;
 
     final techPath = 'user_reports/${user.uid}/$reportId/$techFilename';
@@ -817,102 +747,6 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
    }
         }
 
-// --- ENVÍO VÍA XACTIMATE (CON CATCH PARA DEPURAR) ---
-  Future<void> _sendToHfViaXactimate(File techPdf, File photoPdf, {required bool rushOrder}) async {
-        final shouldStore = await _askStoreReportInCloud();
-  if (!mounted) return;
-
-  if (shouldStore) {
-    await _storeReportInCloud(techPdf, photoPdf);
-    if (!mounted) return;
-  }
-
-
-    final messenger = ScaffoldMessenger.of(context);
-    final total = _calculateHfEmailPrice(rushOrder: rushOrder);
-
-    showDialog(
-  context: context,
-  barrierDismissible: false,
-  builder: (_) => const AlertDialog(
-    content: Row(
-      children: [
-        CircularProgressIndicator(),
-        SizedBox(width: 16),
-        Expanded(child: Text('Please wait… preparing checkout')),
-      ],
-    ),
-  ),
-);
-
-    try {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Preparing HF Xactimate assignment... Total: \$${total.toStringAsFixed(2)}')),
-      );
-
-      final storage = FirebaseStorage.instance;
-      final timeStamp = DateTime.now().millisecondsSinceEpoch;
-      final uid = FirebaseAuth.instance.currentUser!.uid;
-
-      final techUploadTask = await storage
-          .ref('temp_reports/$uid/hf_orders_xactimate/$timeStamp/tech.pdf')
-          .putFile(techPdf);
-
-      final photoUploadTask = await storage
-          .ref('temp_reports/$uid/hf_orders_xactimate/$timeStamp/photos.pdf')
-          .putFile(photoPdf);
-
-      final techUrl = await techUploadTask.ref.getDownloadURL();
-      final photoUrl = await photoUploadTask.ref.getDownloadURL();
-
-      final callable = FirebaseFunctions.instance
-          .httpsCallable('createHfEstimatesXactimateCheckoutSession');
-
-      final result = await callable.call({
-        'techPdfUrl': techUrl,
-        'photoPdfUrl': photoUrl,
-        'rushOrder': rushOrder,
-        'isCommercial': widget.isCommercial,
-        'hasShed': hasShed,
-        'hasDetachedStructure': hasDetachedStructure,
-        'plan': widget.plan,
-        'userEmail': FirebaseAuth.instance.currentUser?.email,
-        'clientName': widget.report.clientName,
-        'claimNumber': widget.report.claimNumber,
-        'address': '${widget.report.address}, ${widget.report.city}, ${widget.report.state} ${widget.report.zip}',
-        'dateInspected': widget.report.dateInspected,
-        'successUrl': 'claimscope://success',
-        'cancelUrl': 'claimscope://cancel',
-      });
-
-      debugPrint('createHfEstimatesXactimateCheckoutSession result: ${result.data}');
-
-      final sessionUrl = result.data['url'] as String?;
-      if (sessionUrl == null) throw Exception("Cloud Function did not return a checkout url.");
-
-      final url = Uri.parse(sessionUrl);
-      final success = await launchUrl(url, mode: LaunchMode.externalApplication);
-      if (!success) throw Exception("Could not open Stripe Checkout.");
-
-     } catch (e) {
-      debugPrint('HF Xactimate failed: $e');
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: const Color.fromARGB(255, 244, 54, 54),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      
-    } finally {if (mounted) Navigator.of(context, rootNavigator: true).pop();
-   }
-  } 
-
-    void _sendToUserXactNetAccount(File techPdf, File photoPdf) {
-     // Llamar a backend/Xactimate API con XactNet del usuario
-    }
        Future<void> _takeExtraPhotoForLabel(String label) async {
   await _takePhoto(
     label,
