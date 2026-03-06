@@ -28,7 +28,11 @@ const transporter = nodemailer.createTransport({
         pass: "jbqjyvsozmwxguuv", // Tu App Password de 16 letras
     },
 });
-
+function sanitizeAttachmentFilename(input, fallback) {
+  const s = String(input || "").trim();
+  if (!s) return fallback;
+  return s.replace(/[\\/\:\*\?"<>\|]/g, "").trim() || fallback;
+}
 // 4. WEBHOOK STRIPE (V2)
 exports.stripeWebhook = onRequest(
     { secrets: [stripeSecretKey, webhookSecret] },
@@ -100,9 +104,21 @@ const mailOptions = {
   subject: "New HF Estimates Order - Roof Inspection Report",
   text: body,
 attachments: [
-  { filename: techFilename || "Inspection Report.pdf", path: techPdfUrl },
-  { filename: photoFilename || "Inspection Photos.pdf", path: photoPdfUrl }
-]
+  {
+    filename: sanitizeAttachmentFilename(
+      session.metadata.techFilename,
+      "Inspection Tech Report.pdf"
+    ),
+    path: techPdfUrl,
+  },
+  {
+    filename: sanitizeAttachmentFilename(
+      session.metadata.photoFilename,
+      "Inspection Photo Report.pdf"
+    ),
+    path: photoPdfUrl,
+  },
+],
 };
       
     try {
