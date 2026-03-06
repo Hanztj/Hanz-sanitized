@@ -1557,10 +1557,22 @@ _formKey.currentState!.save();
 
  if (roofCoverType == 'Shingles') ...[
                 const SizedBox(height: 20),
- const Text(
-    'Roof Replacement Scope',
-  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
- ),
+ RichText(
+  text: const TextSpan(
+    text: 'Roof Replacement Scope',
+    style: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: Colors.black,
+    ),
+    children: [
+      TextSpan(
+        text: ' *',
+        style: TextStyle(color: Colors.orange),
+      ),
+    ],
+  ),
+),
  const Divider(),
 
  // Full roof replacement (roof cover)
@@ -1683,12 +1695,15 @@ _formKey.currentState!.save();
 
               // How many Layers Installed (Conditional)
               if (['Shingles', 'Modified Bitumen', 'Roll Roofing'].contains(roofCoverType))
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'How Many Layers Installed'),
-                  keyboardType: TextInputType.number,
-                  onSaved: (val) => numLayers = int.tryParse(val ?? '0') ?? 0,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
-           ),
+      TextFormField(
+  decoration: InputDecoration(
+    label: _requiredLabel('How Many Layers Installed', requiredField: true),
+    hintText: 'Enter number of layers (e.g., 1, 2, 3)',
+  ),
+  keyboardType: TextInputType.number,
+  onSaved: (val) => numLayers = int.tryParse(val ?? '0') ?? 0,
+  validator: (v) => v!.isEmpty ? 'Required' : null,
+),
                if (['Shingles'].contains(roofCoverType))
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Estimated Roof Age'),
@@ -1875,7 +1890,7 @@ _formKey.currentState!.save();
                     Text('Current Facet: ${_currentFacetNameController.text}',
     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
 
- buildDropdown(
+buildDropdown(
   'Facet Orientation',
   FacetOrientation.values
       .map((e) => e.name)
@@ -1895,7 +1910,8 @@ _formKey.currentState!.save();
       }
     });
   },
- ),
+  requiredField: true,
+),
 
                   TextFormField(
                    controller: _currentFacetNameController,
@@ -2533,26 +2549,30 @@ _formKey.currentState!.save();
   }// final build method
 
 Widget _requiredLabel(String text, {required bool requiredField}) {
-    return RichText(
-      text: TextSpan(
-        text: text,
-        style: Theme.of(context).inputDecorationTheme.labelStyle ?? 
-               TextStyle(color: Theme.of(context).hintColor, fontSize: 16),
-        children: [
-          if (requiredField)
-            const TextSpan(
-              text: ' *',
-              style: TextStyle(
-                color: Colors.orange, 
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  final base = (Theme.of(context).inputDecorationTheme.labelStyle ??
+          const TextStyle(fontSize: 16.5))
+      .copyWith(
+        color: Theme.of(context).hintColor,
+        decoration: TextDecoration.none,
+      );
 
+  return RichText(
+    text: TextSpan(
+      text: text,
+      style: base,
+      children: [
+        if (requiredField)
+          const TextSpan(
+            text: ' *',
+            style: TextStyle(
+              color: Colors.orange,
+              decoration: TextDecoration.none,
+            ),
+          ),
+      ],
+    ),
+  );
+}
   void _showRequiredFieldsWarning() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -2584,6 +2604,7 @@ return DropdownButtonFormField<String>(
           .toList(),
     );
   }
+
 }
 
 
