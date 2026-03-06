@@ -375,7 +375,7 @@ if (isBasico)
               decoration: InputDecoration(
   label: RichText(
     text: const TextSpan(
-      text: 'Street Address',
+      text: 'City',
       style: TextStyle(color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
