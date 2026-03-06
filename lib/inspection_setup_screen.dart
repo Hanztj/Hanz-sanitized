@@ -304,12 +304,28 @@ if (isBasico)
                 style: TextStyle(fontWeight: FontWeight.bold)),
             TextFormField(
               controller: clientName,
-              decoration: const InputDecoration(labelText: 'Client Name'),
+              decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Client Name',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),
             TextFormField(
               controller: clientPhone,
-              decoration: const InputDecoration(labelText: 'Client Phone'),
+              decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Client Phone',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
               keyboardType: TextInputType.phone,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: (v) {
@@ -342,16 +358,33 @@ if (isBasico)
                 style: TextStyle(fontWeight: FontWeight.bold)),
             TextFormField(
               controller: street,
-              decoration: const InputDecoration(labelText: 'Street Address'),
+              decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Street Address',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),
 
             TextFormField(
               controller: city,
-              decoration: const InputDecoration(labelText: 'City'),
+              decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Street Address',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),
             Autocomplete<String>(
+              
               optionsBuilder: (TextEditingValue textEditingValue) {
                 if (textEditingValue.text == '') {
                   return const Iterable<String>.empty();
@@ -368,8 +401,15 @@ if (isBasico)
                 return TextFormField(
                   controller: textEditingController,
                   focusNode: focusNode,
-                  decoration:
-                      const InputDecoration(labelText: 'State'),
+                  decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'State',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'State is required';
@@ -390,7 +430,15 @@ if (isBasico)
             ),
             TextFormField(
               controller: zip,
-              decoration: const InputDecoration(labelText: 'Zip Code'),
+              decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Zip Code',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
               validator: (v) => v!.isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 20),
@@ -410,20 +458,34 @@ if (isBasico)
                       ),
             TextFormField(
               controller: dateOfLoss,
-              decoration: InputDecoration(
-                labelText: 'Date of Loss',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () => _selectDate(context, dateOfLoss),
-                ),
-              ),
+           decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Date of Loss',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+  suffixIcon: IconButton(
+    icon: const Icon(Icons.calendar_today),
+    onPressed: () => _selectDate(context, dateOfLoss),
+  ),
+),
               readOnly: true,
               validator: (v) =>
                   v!.isEmpty ? 'Date of Loss is required' : null,
             ),
             DropdownButtonFormField<String>(
               initialValue: _typeOfLoss,
-              decoration: const InputDecoration(labelText: 'Type of Loss'),
+              decoration: InputDecoration(
+  label: RichText(
+    text: const TextSpan(
+      text: 'Type of Loss',
+      style: TextStyle(color: Colors.black),
+      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+    ),
+  ),
+),
               hint: const Text('Select Type of Loss'),
               items: lossTypes.map((String type) {
                 return DropdownMenuItem<String>(
@@ -597,4 +659,7 @@ onPressed: () async {
       ),
     );
   }
+
+
+  
 }
