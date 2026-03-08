@@ -17,6 +17,8 @@ class InspectionReport {
   String typeOfLoss = '';
   String causeOfLoss = '';
   bool isResidential = true;
+  bool iceAndWaterBarrierInstalled = false;
+  File? iceAndWaterBarrierPhoto;
 
   // INSPECTOR
   String inspectorCompany = '';  // empresa que inspecciona
@@ -45,11 +47,14 @@ class InspectionReport {
   File? frontElevationPhoto;
   File? dripEdgePhoto;
 
-  bool hasGlobalRidgeVent = false;
-  String? globalRidgeVentType;
-  File? globalRidgeVentPhoto;
+  bool starterRowInstalled = false;
+  bool starterEaveInstalled = false;
+  bool starterRakeInstalled = false;
 
-    // Roof replacement scope
+  File? starterEavePhoto;
+  File? starterRakePhoto;
+
+      // Roof replacement scope
   bool fullRoofReplacementRequired = false;
   String? partialReplacementSqft; // texto tal cual, ej: "250"
 
@@ -114,52 +119,55 @@ class VentData {
   });
 }
 
-  class FacetData {
-    String name;
-    String orientation;
-    String? pitch;
+ class FacetData {
+  String name;
+  String orientation;
+  String? pitch;
 
-    bool starterRowInstalled;
-    bool starterEaveInstalled;
-    bool starterRakeInstalled;
+  // Ridge Vent (POR FACETA)
+  bool hasRidgeVent;
+  String? ridgeVentType;
+  File? ridgeVentPhoto;
 
-    bool atrPerformed;
-    String? atrResult;
+  bool atrPerformed;
+  String? atrResult;
 
-    bool hasValleyMetal;
-    String? valleyMetalType;
-    List<FlashingData> flashings;
-    List<VentData> vents;
+  bool hasValleyMetal;
+  String? valleyMetalType;
+  List<FlashingData> flashings;
+  List<VentData> vents;
 
-    List<OtherElementData> otherElements;
+  List<OtherElementData> otherElements;
 
-    String? comment;
-    
-    FacetData({
-      required this.name,
-      required this.orientation,
-      this.pitch,
-      this.starterRowInstalled = false,
-      this.starterEaveInstalled = false,
-      this.starterRakeInstalled = false,
-      this.atrPerformed = false,
-      this.atrResult,
-      this.hasValleyMetal = false,
-      this.valleyMetalType,
-      this.flashings = const [],
-      this.vents = const [],
-      this.otherElements = const [], 
-      this.comment,
-    });
-    }
+  String? comment;
+
+  FacetData({
+    required this.name,
+    required this.orientation,
+    this.pitch,
+
+    this.hasRidgeVent = false,
+    this.ridgeVentType,
+    this.ridgeVentPhoto,
+
+    this.atrPerformed = false,
+    this.atrResult,
+    this.hasValleyMetal = false,
+    this.valleyMetalType,
+    this.flashings = const [],
+    this.vents = const [],
+    this.otherElements = const [],
+    this.comment,
+  });
+}
     class OtherElementData {
-  String type;               // Snow guard/stop, Skylight, etc.
-  String? count;             // texto numérico
-  bool shouldBeChanged;
-  bool detachAndResetOnly;   // uno u otro, no ambos
-  String? otherSpecify;      // solo cuando type == "Other"
+    String type;               // Snow guard/stop, Skylight, etc.
+    String? count;             // texto numérico
+    bool shouldBeChanged;
+    bool detachAndResetOnly;   // uno u otro, no ambos
+    String? otherSpecify;      // solo cuando type == "Other"
 
-  OtherElementData({
+   OtherElementData({
     required this.type,
     this.count,
     this.shouldBeChanged = false,
