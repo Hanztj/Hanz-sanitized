@@ -100,12 +100,31 @@ _buildDataRow(
   "Number of Layers",
   report.numLayers != null ? report.numLayers.toString() : "N/A",
 ),
+
 _buildDataRow(
   "Ridge Vent",
-  report.hasGlobalRidgeVent
-      ? "Yes (${report.globalRidgeVentType ?? 'Type N/A'})"
+  report.facets.any((f) => f.hasRidgeVent)
+      ? "Yes (${report.facets.where((f) => f.hasRidgeVent).map((f) => '${f.name}: ${f.ridgeVentType ?? 'Type N/A'}').join(', ')})"
       : "No",
 ),
+_buildDataRow(
+  "Ice & Water Barrier",
+  report.iceAndWaterBarrierInstalled ? "Yes" : "No",
+),
+_buildDataRow(
+  "Starter Row Installed",
+  report.starterRowInstalled ? "Yes" : "No",
+),
+if (report.starterRowInstalled) ...[
+  _buildDataRow(
+    "Starter Row at Eave",
+    report.starterEaveInstalled ? "Yes" : "No",
+  ),
+  _buildDataRow(
+    "Starter Row at Rake",
+    report.starterRakeInstalled ? "Yes" : "No",
+  ),
+],
 _buildDataRow(
   "Drip Edge",
   report.hasDripEdge
@@ -173,20 +192,14 @@ else
               "Facet: ${facet.name} (${facet.orientation})",
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
-            _buildDataRow(
-              "Starter Row Installed",
-              facet.starterRowInstalled ? "Yes" : "No",
-            ),
-            if (facet.starterRowInstalled) ...[
+              
               _buildDataRow(
-                "Starter Row at Eave",
-                facet.starterEaveInstalled ? "Yes" : "No",
-              ),
-              _buildDataRow(
-                "Starter Row at Rake",
-                facet.starterRakeInstalled ? "Yes" : "No",
-              ),
-            ],
+              "Ridge Vent",
+               facet.hasRidgeVent
+               ? "Yes (${facet.ridgeVentType ?? 'Type N/A'})"
+               : "No",
+               ),
+               
             _buildDataRow(
               "ATR Performed",
               facet.atrPerformed ? "Yes" : "No",
@@ -399,6 +412,3 @@ return {'tech': techFile, 'photos': photoFile};
   }
 
 }
-
-
-
