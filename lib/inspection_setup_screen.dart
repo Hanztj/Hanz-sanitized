@@ -308,7 +308,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'Client Name',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -321,7 +321,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'Client Phone',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -355,14 +355,14 @@ if (isBasico)
 
             const SizedBox(height: 20),
             const Text('Property Address:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             TextFormField(
               controller: street,
               decoration: InputDecoration(
   label: RichText(
     text: const TextSpan(
       text: 'Street Address',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -376,7 +376,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'City',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -405,7 +405,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'State',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -434,7 +434,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'Zip Code',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -462,7 +462,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'Date of Loss',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
@@ -481,7 +481,7 @@ if (isBasico)
   label: RichText(
     text: const TextSpan(
       text: 'Type of Loss',
-      style: TextStyle(color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
     ),
   ),
