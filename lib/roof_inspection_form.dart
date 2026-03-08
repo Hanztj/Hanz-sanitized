@@ -775,16 +775,16 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
 
    File? frontElevationPhoto;
 
-   bool hasGlobalRidgeVent = false;
-   String? globalRidgeVentType;
-   File? globalRidgeVentPhoto;
+   bool _currentHasRidgeVent = false;
+   String? _currentRidgeVentType;
+   File? _currentRidgeVentPhoto;
 
    bool gravelBallastPresent = false;
 
    bool hasShed = false;
    bool hasDetachedStructure = false;
 
-     bool fullRoofReplacementRequired = false;
+  bool fullRoofReplacementRequired = false;
   String? partialReplacementSqft;
 
   bool sheathingRequiredToBeChanged = false;
@@ -818,11 +818,14 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
    final TextEditingController _currentReferenceMeasuredController = TextEditingController();
    final TextEditingController _currentPitchFacetController = TextEditingController();
   
-   bool _currentStarterRowInstalled = false;
-   bool _currentStarterEaveInstalled = false;
-   File? _currentStarterEavePhoto;
-   bool _currentStarterRakeInstalled = false;
-   File? _currentStarterRakePhoto;
+   bool starterRowInstalled = false;
+   bool starterEaveInstalled = false;
+   File? starterEavePhoto;
+   bool starterRakeInstalled = false;
+   File? starterRakePhoto;
+
+   bool iceAndWaterBarrierInstalled = false;
+   File? iceAndWaterBarrierPhoto;
 
    bool _currentAtrPerformed = false;
    String? _currentAtrResult;
@@ -980,21 +983,25 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
         dripEdgePhoto = img;
         widget.report.dripEdgePhoto = img;
       } else if (label == 'Ridge Vent Photo') {
-        globalRidgeVentPhoto = img;
-        widget.report.globalRidgeVentPhoto = img;
+      } else if (label == 'Starter Row Eave Photo') {
+        starterEavePhoto = img;
+      } else if (label == 'Starter Row Rake Photo') {
+        starterRakePhoto = img;
+      } else if (label == 'Ice and Water Barrier Photo') {
+        iceAndWaterBarrierPhoto = img;
+        widget.report.iceAndWaterBarrierPhoto = img;
       }
+
     } else if (isFacetPhoto && facetIndex != null) {
       // Fotos asociadas a una faceta concreta
       if (label == 'Overview Photo') {
         _facets[facetIndex]['overviewPicture'] = img;
         _currentFacetOverviewPhoto = img;
-      } else if (label == 'Starter Row Eave Photo') {
-        _facets[facetIndex]['starterEavePhoto'] = img;
-        _currentStarterEavePhoto = img;
-      } else if (label == 'Starter Row Rake Photo') {
-        _facets[facetIndex]['starterRakePhoto'] = img;
-        _currentStarterRakePhoto = img;
-      } else if (label == 'ATR Photo') {
+      } else if (label == 'Ridge Vent Photo') {
+        _facets[facetIndex]['ridgeVentPhoto'] = img;
+        _currentRidgeVentPhoto = img;
+       }     
+      else if (label == 'ATR Photo') {
         _facets[facetIndex]['atrPhoto'] = img;
         _currentAtrPhoto = img;
       } else if (label == 'Valley Metal Photo') {
@@ -1059,7 +1066,7 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
    debugPrint('Roof form validate() = $isValid');
 
 if (!isValid) {
-  _showRequiredFieldsWarning(); // o reemplaza por el SnackBar que ya tienes
+  _showRequiredFieldsWarning(); // o reemplaza por el SnackBar anterior
   return;
 }
 
@@ -1072,11 +1079,10 @@ _formKey.currentState!.save();
     widget.report.roofSubType = roofSubType;
     widget.report.hasDripEdge = hasDripEdge;
     widget.report.dripEdgeType = dripEdgeType;
+    widget.report.iceAndWaterBarrierInstalled = iceAndWaterBarrierInstalled;
     //
     widget.report.hasShed = hasShed;
     widget.report.hasDetachedStructure = hasDetachedStructure;
-    widget.report.hasGlobalRidgeVent = hasGlobalRidgeVent;
-    widget.report.globalRidgeVentType = globalRidgeVentType;
 
       widget.report.fullRoofReplacementRequired = fullRoofReplacementRequired;
       widget.report.partialReplacementSqft =
@@ -1125,11 +1131,9 @@ _formKey.currentState!.save();
     _currentFacetOrientation = currentFacetData['facetOrientation'] ?? FacetOrientation.none;
     _currentFacetOverviewPhoto = currentFacetData['overviewPicture'];
     _currentReferenceMeasuredController.text = currentFacetData['referenceMeasured'] ?? '';
-    _currentStarterRowInstalled = currentFacetData['starterRowInstalled'] ?? false;
-    _currentStarterEaveInstalled = currentFacetData['starterEaveInstalled'] ?? false;
-    _currentStarterEavePhoto = currentFacetData['starterEavePhoto'];
-    _currentStarterRakeInstalled = currentFacetData['starterRakeInstalled'] ?? false;
-    _currentStarterRakePhoto = currentFacetData['starterRakePhoto'];
+    _currentHasRidgeVent = currentFacetData['hasRidgeVent'] ?? false;
+    _currentRidgeVentType = currentFacetData['ridgeVentType'];
+    _currentRidgeVentPhoto = currentFacetData['ridgeVentPhoto'];
     _currentPitchFacetController.text = currentFacetData['pitchFacetValue'] ?? '';
     _currentAtrPerformed = currentFacetData['atrPerformed'] ?? false;
     _currentAtrResult = currentFacetData['atrResult'];
@@ -1213,11 +1217,9 @@ _formKey.currentState!.save();
     'facetOrientation': _currentFacetOrientation,
     'overviewPicture': _currentFacetOverviewPhoto,
     'referenceMeasured': _currentReferenceMeasuredController.text,
-    'starterRowInstalled': _currentStarterRowInstalled,
-    'starterEaveInstalled': _currentStarterEaveInstalled,
-    'starterEavePhoto': _currentStarterEavePhoto,
-    'starterRakeInstalled': _currentStarterRakeInstalled,
-    'starterRakePhoto': _currentStarterRakePhoto,
+    'hasRidgeVent': _currentHasRidgeVent,
+    'ridgeVentType': _currentRidgeVentType,
+    'ridgeVentPhoto': _currentRidgeVentPhoto,
     'pitchFacetValue': _currentPitchFacetController.text,
     'atrPerformed': _currentAtrPerformed,
     'atrResult': _currentAtrResult,
@@ -1293,9 +1295,6 @@ _formKey.currentState!.save();
       name: f['facetName'] ?? '',
       orientation: orientation.name,
       pitch: f['pitchFacetValue'] as String?,
-      starterRowInstalled: f['starterRowInstalled'] ?? false,
-      starterEaveInstalled: f['starterEaveInstalled'] ?? false,
-      starterRakeInstalled: f['starterRakeInstalled'] ?? false,
       atrPerformed: f['atrPerformed'] ?? false,
       atrResult: f['atrResult'] as String?,
       hasValleyMetal: f['hasValleyMetal'] ?? false,
@@ -1312,10 +1311,13 @@ _formKey.currentState!.save();
     return {
       'facetName': '',
       'facetOrientation': FacetOrientation.none,
-      'starterRowInstalled': false,
+      'overviewPicture': null,
       'vents': [],
       'flashings': [],
       'otherElements': <Map<String, dynamic>>[], 
+      'hasRidgeVent': false,
+      'ridgeVentType': null,
+      'ridgeVentPhoto': null,
     };
   }
 
@@ -1743,40 +1745,88 @@ _formKey.currentState!.save();
  ),
               
 
-              // Ridge Vent Installed? (Global)
-              if (['Shingles'].contains(roofCoverType))
-              CheckboxListTile(
-                title: const Text('Is there Ridge Vent?'),
-                value: hasGlobalRidgeVent,
-                onChanged: (val) => setState(() {
-                  hasGlobalRidgeVent = val!;
-                  if (!hasGlobalRidgeVent) {
-                    globalRidgeVentType = null;
-                    globalRidgeVentPhoto = null;
-                    widget.report.globalRidgeVentType = null;
-                    widget.report.globalRidgeVentPhoto = null;
-                  }
-                }),
+           // Starter Row Questions (GLOBAL)
+CheckboxListTile(
+  title: const Text('Starter Row Installed?'),
+  value: starterRowInstalled,
+  onChanged: (val) => setState(() {
+    starterRowInstalled = val ?? false;
+    if (!starterRowInstalled) {
+      starterEaveInstalled = false;
+      starterEavePhoto = null;
+      starterRakeInstalled = false;
+      starterRakePhoto = null;
+    }
+  }),
+),
+
+if (starterRowInstalled)
+  Column(
+    children: [
+      CheckboxListTile(
+        title: const Text('Starter Row at Eave?'),
+        value: starterEaveInstalled,
+        onChanged: (val) => setState(() {
+          starterEaveInstalled = val ?? false;
+          if (!starterEaveInstalled) starterEavePhoto = null;
+        }),
+      ),
+      if (starterEaveInstalled)
+        Column(
+          children: [
+            ElevatedButton(
+              onPressed: () => _takePhoto(
+                'Starter Row Eave Photo',
+                isGlobal: true,
               ),
-              if (hasGlobalRidgeVent)
-                Column( 
-                  children: [
-                    buildDropdown('Ridge Vent Type', ridgeVentTypes,
-                        globalRidgeVentType, (val) => setState(() => globalRidgeVentType = val)),
-                    ElevatedButton(
-                      onPressed: () => _takePhoto('Ridge Vent Photo', isGlobal: true),
-                      child: const Text("Take Ridge Vent Photo"),
-                    ),
-                    TextButton(
-                    onPressed: () => _takeExtraPhotoForLabel('Ridge Vent extra photo'),
-                    child: const Text('Add extra Ridge Vent photo'),),
-                    if (globalRidgeVentPhoto != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Image.file(globalRidgeVentPhoto!, height: 100),
-                      ),
-                  ],
-                ),
+              child: const Text("Take Starter Row Eave Photo"),
+            ),
+            TextButton(
+              onPressed: () => _takeExtraPhotoForLabel(
+                'Starter row at Eave extra photo',
+              ),
+              child: const Text('Add extra Starter row at Eave photo'),
+            ),
+            if (starterEavePhoto != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Image.file(starterEavePhoto!, height: 100),
+              ),
+          ],
+        ),
+      CheckboxListTile(
+        title: const Text('Starter Row at Rake?'),
+        value: starterRakeInstalled,
+        onChanged: (val) => setState(() {
+          starterRakeInstalled = val ?? false;
+          if (!starterRakeInstalled) starterRakePhoto = null;
+        }),
+      ),
+      if (starterRakeInstalled)
+        Column(
+          children: [
+            ElevatedButton(
+              onPressed: () => _takePhoto(
+                'Starter Row Rake Photo',
+                isGlobal: true,
+              ),
+              child: const Text("Take Starter Row Rake Photo"),
+            ),
+            TextButton(
+              onPressed: () => _takeExtraPhotoForLabel(
+                'Starter row at Rake extra photo',
+              ),
+              child: const Text('Add extra Starter row at Rake photo'),
+            ),
+            if (starterRakePhoto != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Image.file(starterRakePhoto!, height: 100),
+              ),
+          ],
+        ),
+    ],
+  ),
                                
               // Drip Edge Installed? (Simplified)
               if (['Shingles'].contains(roofCoverType))
@@ -1833,6 +1883,38 @@ _formKey.currentState!.save();
                     });
                   },
                 ),
+
+                 if (['Shingles'].contains(roofCoverType))
+  CheckboxListTile(
+    title: const Text('Ice & Water Barrier Installed?'),
+    value: iceAndWaterBarrierInstalled,
+    onChanged: (val) => setState(() {
+      iceAndWaterBarrierInstalled = val ?? false;
+      if (!iceAndWaterBarrierInstalled) {
+        iceAndWaterBarrierPhoto = null;
+      }
+    }),
+  ),
+
+if (iceAndWaterBarrierInstalled)
+  Column(
+    children: [
+      ElevatedButton(
+        onPressed: () => _takePhoto('Ice & Water Barrier Photo', isGlobal: true),
+        child: const Text("Take Ice & Water Barrier Photo"),
+      ),
+      TextButton(
+        onPressed: () => _takeExtraPhotoForLabel('Ice & Water Barrier extra photo'),
+        child: const Text('Add extra Ice & Water Barrier photo'),
+      ),
+      if (iceAndWaterBarrierPhoto != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Image.file(iceAndWaterBarrierPhoto!, height: 100),
+        ),
+    ],
+  ),
+
               const SizedBox(height: 20),
 
               // --- Facet Inspection Section ---
@@ -1936,76 +2018,55 @@ buildDropdown(
                         child: Image.file(_currentFacetOverviewPhoto!, height: 100),
                       ),
 
-                   // Starter Row Questions for current facet
-                    CheckboxListTile(
-                      title: const Text('Starter Row Installed?'),
-                      value: _currentStarterRowInstalled,
-                      onChanged: (val) => setState(() {
-                        _currentStarterRowInstalled = val!;
-                        if (!val) {
-                          _currentStarterEaveInstalled = false;
-                          _currentStarterEavePhoto = null;
-                          _currentStarterRakeInstalled = false;
-                          _currentStarterRakePhoto = null;
-                        }
-                      }),
+                      // Ridge Vent Installed? (PER FACET)
+                       if (['Shingles'].contains(roofCoverType))
+                       CheckboxListTile(
+                       title: const Text('Is there Ridge Vent?'),
+                       value: _currentHasRidgeVent,
+                       onChanged: (val) => setState(() {
+                       _currentHasRidgeVent = val ?? false;
+                        if (!_currentHasRidgeVent) {
+                        _currentRidgeVentType = null;
+                        _currentRidgeVentPhoto = null;
+                      _facets[_currentFacetIndex]['ridgeVentType'] = null;
+                      _facets[_currentFacetIndex]['ridgeVentPhoto'] = null;
+                      }
+                      _facets[_currentFacetIndex]['hasRidgeVent'] = _currentHasRidgeVent;
+                     }),
                     ),
-                    if (_currentStarterRowInstalled)
-                      Column(
-                        children: [
-                          CheckboxListTile(
-                            title: const Text('Starter Row at Eave?'),
-                            value: _currentStarterEaveInstalled,
-                            onChanged: (val) => setState(() {
-                              _currentStarterEaveInstalled = val!;
-                              if (!val) _currentStarterEavePhoto = null;
-                            }),
-                          ),
-                          if (_currentStarterEaveInstalled)
-                            Column(
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () => _takePhoto('Starter Row Eave Photo',
-                                      isFacetPhoto: true, facetIndex: _currentFacetIndex),
-                                  child: const Text("Take Starter Row Eave Photo"),
-                                ),
-                                TextButton(onPressed: () => _takeExtraPhotoForLabel('Starter row at Eave extra photo'),
-                                child: const Text('Add extra Starter row at Eave photo'),),
-                                if (_currentStarterEavePhoto != null)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                    child: Image.file(_currentStarterEavePhoto!, height: 100),
-                                  ),
-                              ],
-                            ),
-                          CheckboxListTile(
-                            title: const Text('Starter Row at Rake?'),
-                            value: _currentStarterRakeInstalled,
-                            onChanged: (val) => setState(() {
-                              _currentStarterRakeInstalled = val!;
-                              if (!val) _currentStarterRakePhoto = null;
-                            }),
-                          ),
-                          if (_currentStarterRakeInstalled)
-                            Column(
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () => _takePhoto('Starter Row Rake Photo',
-                                      isFacetPhoto: true, facetIndex: _currentFacetIndex),
-                                  child: const Text("Take Starter Row Rake Photo"),
-                                ),
-                                 TextButton(onPressed: () => _takeExtraPhotoForLabel('Starter row at Rake extra photo'),
-                                child: const Text('Add extra Starter row at Rake photo'),),
-                                if (_currentStarterRakePhoto != null)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                    child: Image.file(_currentStarterRakePhoto!, height: 100),
-                                  ),
-                              ],
-                            ),
-                        ],
+
+                       if (_currentHasRidgeVent)
+                       Column(
+                       children: [
+                       buildDropdown(
+                      'Ridge Vent Type',
+                       ridgeVentTypes,
+                       _currentRidgeVentType,
+                       (val) => setState(() {
+                      _currentRidgeVentType = val;
+                      _facets[_currentFacetIndex]['ridgeVentType'] = val;
+                        }),
+                     ),
+                       ElevatedButton(
+                      onPressed: () => _takePhoto(
+                      'Ridge Vent Photo',
+                       isFacetPhoto: true,
+                       facetIndex: _currentFacetIndex,
                       ),
-                 
+                      child: const Text("Take Ridge Vent Photo"),
+                      ),
+                       TextButton(
+                      onPressed: () => _takeExtraPhotoForLabel('Ridge Vent extra photo'),
+                      child: const Text('Add extra Ridge Vent photo'),
+                    ),
+                      if (_currentRidgeVentPhoto != null)
+                      Padding(
+                     padding: const EdgeInsets.symmetric(vertical: 8.0),
+                       child: Image.file(_currentRidgeVentPhoto!, height: 100),
+        ),
+    ],
+  ),
+                                   
                     CheckboxListTile(
                       title: const Text('ATR Performed?'),
                       value: _currentAtrPerformed,
@@ -2394,6 +2455,12 @@ buildDropdown(
             ),
             child: const Text("Take element photo"),
           ),
+          TextButton(
+             onPressed: () => _takeExtraPhotoForLabel(
+              'Other element ${idx + 1} (${data['type'] ?? 'Unknown'}) extra photo',
+                   ),
+               child: const Text('Add extra element photo'),
+               ),
           if (data['photo'] != null)
             Padding(
               padding:
