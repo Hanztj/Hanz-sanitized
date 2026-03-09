@@ -390,10 +390,10 @@ return {'tech': techFile, 'photos': photoFile};
         pw.Text(item.label, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 5),
         pw.Container(
-          height: 330, // Altura optimizada para 2 por página A4
+          height: 300, // Altura optimizada para 2 por página A4
           width: double.infinity,
           decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey)),
-          child: pw.Image(pw.MemoryImage(item.file.readAsBytesSync()), fit: pw.BoxFit.contain),
+          child: pw.Image(pw.MemoryImage(item.file.readAsBytesSync()), fit: pw.BoxFit.cover),
         ),
       ],
     );
