@@ -711,7 +711,6 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
     'hasShed': hasShed,
     'hasDetachedStructure': hasDetachedStructure,
     'plan': widget.plan, // 'basic' / 'premium'
-
     'userEmail': FirebaseAuth.instance.currentUser?.email,
     'clientName': widget.report.clientName,
     'claimNumber': widget.report.claimNumber,
@@ -722,14 +721,14 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
   });
      final sessionUrl = result.data['url'] as String?;
      if (sessionUrl == null) {
-    throw Exception("La función no devolvió la URL de Stripe.");
+    throw Exception("The function did not return the Stripe URL.");
   }
 
   // Abrir la URL de Stripe Checkout
         final url = Uri.parse(sessionUrl);
         final success= await launchUrl(url, mode: LaunchMode.externalApplication);
           if (!success) {
-            throw Exception("No se pudo abrir Stripe Checkout.");
+            throw Exception("Stripe Checkout could not be opened.");
           }
                } catch (e) {
       debugPrint('HF Xactimate failed: $e');
@@ -987,20 +986,17 @@ void _sendReportToCustomEmail(File techPdf, File photoPdf) {
         starterEavePhoto = img;
       } else if (label == 'Starter Row Rake Photo') {
         starterRakePhoto = img;
-      } else if (label == 'Ice and Water Barrier Photo') {
+      } else if (label == 'Ice & Water Barrier Photo') {
         iceAndWaterBarrierPhoto = img;
         widget.report.iceAndWaterBarrierPhoto = img;
       }
 
     } else if (isFacetPhoto && facetIndex != null) {
       // Fotos asociadas a una faceta concreta
-      if (label == 'Overview Photo') {
+      if (label == 'Facet Overview Photo') {
         _facets[facetIndex]['overviewPicture'] = img;
         _currentFacetOverviewPhoto = img;
-      } else if (label == 'Ridge Vent Photo') {
-        _facets[facetIndex]['ridgeVentPhoto'] = img;
-        _currentRidgeVentPhoto = img;
-       }     
+      }   
       else if (label == 'ATR Photo') {
         _facets[facetIndex]['atrPhoto'] = img;
         _currentAtrPhoto = img;
@@ -1080,6 +1076,9 @@ _formKey.currentState!.save();
     widget.report.hasDripEdge = hasDripEdge;
     widget.report.dripEdgeType = dripEdgeType;
     widget.report.iceAndWaterBarrierInstalled = iceAndWaterBarrierInstalled;
+    widget.report.starterRowInstalled = starterRowInstalled;
+    widget.report.starterEaveInstalled = starterEaveInstalled;
+    widget.report.starterRakeInstalled = starterRakeInstalled;
     //
     widget.report.hasShed = hasShed;
     widget.report.hasDetachedStructure = hasDetachedStructure;
@@ -1303,6 +1302,9 @@ _formKey.currentState!.save();
       vents: vents,
       otherElements: otherElements,
       comment: f['comment'] as String?,
+      hasRidgeVent: f['hasRidgeVent'] ?? false,
+      ridgeVentType: f['ridgeVentType'] as String?,
+      ridgeVentPhoto: f['ridgeVentPhoto'] as File?,
     );
   }).toList();
  }
@@ -1418,7 +1420,7 @@ _formKey.currentState!.save();
     final List<String> ridgeVentTypes = ['Aluminum', 'Shingle over stile'];
     final List<String> atrResults = ['Passed', 'Failed'];
     final List<String> valleyMetalTypes = [
-      'Valley metal',
+      'Valley metal Standard',
       'Valley metal W profile',
       'Valley metal W profile painted',
       'Valley metal copper',
@@ -1448,7 +1450,7 @@ _formKey.currentState!.save();
                 messenger.showSnackBar(
                   SnackBar(
                     content:
-                        Text('No se pudo abrir Stripe Checkout: $e'),
+                        Text('Stripe Checkout could not be opened: $e'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -1510,7 +1512,7 @@ _formKey.currentState!.save();
               ),
               const SizedBox(height: 20),
               const Text('Roof Details',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,)),
               const Divider(),
 
               // Type of Roof Cover Dropdown
@@ -1716,7 +1718,7 @@ _formKey.currentState!.save();
                    const SizedBox(height: 20),
                    const Text(
                         'Additional Structures',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
                      ),
                    const Divider(),
 
@@ -1931,7 +1933,7 @@ if (iceAndWaterBarrierInstalled)
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Facet Inspection',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,)),
                     const Divider(),
 
                     // Facet Navigation (if more than one facet)
@@ -2132,7 +2134,7 @@ buildDropdown(
                         const SizedBox(height: 20),
  const Text(
   'Flashings on Facet',
-  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
  ),
  const Divider(),
 
@@ -2245,7 +2247,7 @@ buildDropdown(
                      // Luego viene 'Vents on Facet'
                     const SizedBox(height: 20),
                     const Text('Vents on Facet',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,)),
                     const Divider(),
 
                     // Dynamically added vent sections
@@ -2351,7 +2353,7 @@ buildDropdown(
                                 const SizedBox(height: 20),
  const Text(
   'Other elements on the roof',
-  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
  ),
  const Divider(),
 
@@ -2503,7 +2505,7 @@ buildDropdown(
                                       const SizedBox(height: 20),
                                        const Text(
                                       'Additional comment on this facet',
-                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
                                      ),
                                       const Divider(),
                                     TextFormField(
@@ -2544,7 +2546,7 @@ buildDropdown(
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Imágenes añadidas al reporte:', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text('Images added to the report::', style: TextStyle(fontWeight: FontWeight.bold)),
                             Wrap(
                               spacing: 8.0, // Espacio entre imágenes
                               runSpacing: 4.0, // Espacio entre líneas de imágenes
