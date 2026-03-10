@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; 
 import 'package:claimscope_clean/roof_inspection_form.dart';
-// import 'theme.dart'; 
-// Importaciones para el estado getUserPlanStatus
-import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:claimscope_clean/Services/auth_plan_service.dart';
-//ignore: unused_import
 import 'package:claimscope_clean/services/stripe_service.dart';
 import 'package:claimscope_clean/screens/my_reports_screen.dart';
-//ignore: unused_import
-import 'screens/subscription_gate_screen.dart'; 
 import 'inspection_report_model.dart';
+
 final List<String> usStates = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
   'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
@@ -62,7 +57,7 @@ Future<void> _handleSubscriptionAndNavigate(InspectionReport report) async {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Solo el formulario Roof está implementado...'),
+          content: Text('Only the Roof form is implemented...'),
         ),
       );
     }
@@ -81,8 +76,7 @@ Future<void> _handleSubscriptionAndNavigate(InspectionReport report) async {
   bool isResidential = true;
   bool inspectRoof = true;
   bool inspectElevations = false;
-  bool inspectInterior = false;
-  String? interiorScope; // Mitigation, Restoration, Both
+ // Mitigation, Restoration, Both
 
   String? _typeOfLoss;
 
@@ -146,8 +140,6 @@ report.inspectorEmail = personEmail.text;
 // INSPECTION SCOPE
 report.inspectRoof = inspectRoof;
 report.inspectElevations = inspectElevations;
-report.inspectInterior = inspectInterior;
-report.interiorScope = interiorScope ?? '';
 
   // Aquí ya NO navegamos directamente.
   // Delegamos en _handleSubscriptionAndNavigate para respetar el plan.
@@ -164,22 +156,14 @@ report.interiorScope = interiorScope ?? '';
     'Hail',
     'Windstorm',
     'Hurricane',
-    'Flood',
-    'Water',
-    'Mold',
     'Fire',
-    'Smoke',
-    'Sewage',
-    'DrainBackup',
     'Earthquake',
     'Freeze',
-    'IceOrSnow',
+    'Ice Or Snow',
     'Lightning',
-    'Other',
-    'Theft',
     'Tornado',
-    'Vandalism',
-    'Vehicle',
+    'Other',   
+
   ];
 
   @override
@@ -579,31 +563,7 @@ if (isBasico)
                 });
               },
             ),
-            CheckboxListTile(
-              title: const Text('Interior'),
-              value: inspectInterior,
-              onChanged: (v) {
-                setState(() {
-                  inspectInterior = v!;
-                  if (!v) interiorScope = null;
-                });
-              },
-            ),
-            if (inspectInterior)
-              DropdownButtonFormField<String>(
-                initialValue: interiorScope,
-                hint: const Text('Select interior scope'),
-                items: ['Mitigation', 'Restoration', 'Both']
-                    .map((e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => interiorScope = v),
-                validator: (v) =>
-                    inspectInterior && v == null ? 'Required' : null,
-              ),
-
+        
             const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
@@ -625,16 +585,6 @@ onPressed: () async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Please correct the errors in the form.'),
-      ),
-    );
-    return;
-  }
-
-  if (!inspectRoof && !inspectElevations && !inspectInterior) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please select at least one inspection type.'),
       ),
     );
     return;
