@@ -69,16 +69,107 @@ class InspectionReport {
   List<PhotoItem> photoReportItems = [];
   List<FacetData> facets = [];
 
+   // COMMERCIAL
+  List<CommercialBuildingData> commercialBuildings = [];
+
   void addPhoto(File file, String label) {
     photoReportItems.add(PhotoItem(file: file, label: label));
   }
 }
 
-
 class PhotoItem {
   final File file;
   final String label;
   PhotoItem({required this.file, required this.label});
+}
+
+class CommercialBuildingData {
+  String? name;
+  bool differentAddress = false;
+  String? streetAddress;
+
+  bool hasMultipleRoofTypes = false;
+  List<CommercialRoofSectionData> roofs = [];
+
+  String? notes;
+
+  CommercialBuildingData();
+
+  String displayName(int index) {
+    final n = (name ?? '').trim();
+    return n.isEmpty ? 'Building ${index + 1}' : n;
+  }
+}
+
+class CommercialRoofSectionData {
+  String? roofLabel;
+  String? roofType;
+  String? roofSubType;
+
+  // Shingles/Metal simplification
+  String? pitch;
+  int facetCount = 1;
+
+  // Metal
+  String? metalStyle; // Flat / Gable / Other
+
+  // Flat systems
+  bool coreSamplePerformed = false;
+  File? coreSamplePhoto;
+
+  String? deckType; // Metal/Concrete/Wood/Other
+  String? deckTypeOtherSpecify;
+
+  String? insulationMaterial; // ISO/EPS/XPS/Mineral Wool
+  String? insulationThickness;
+  bool isTapered = false;
+
+  bool hasCoverBoard = false;
+  String? coverBoardType; // DensDeck/HD ISO/Wood Fiber/Other
+  String? coverBoardOtherSpecify;
+  String? coverBoardThickness; // 1/4" / 1/2"
+
+  String? attachmentMethod; // Mechanical / Adhered / Ballasted
+
+  // Only when coreSamplePerformed == false
+  String? noCoreSampleApproach; // 'EnergyCode' or 'BidItem'
+
+  File? overviewPhoto;
+
+  List<AccessoryItemData> accessories = [];
+  List<HvacUnitData> hvacUnits = [];
+
+  String? notes;
+}
+
+class AccessoryItemData {
+  String? type;
+  String? otherSpecify;
+
+  String? count;
+  bool shouldBeChanged = false;
+  bool detachAndResetOnly = false;
+
+  File? photo;
+  List<File> extraPhotos = [];
+
+  String? notes;
+}
+
+class HvacUnitData {
+  String? type; // AC Unit / RTU / Other
+  String? otherSpecify;
+
+  String action = 'No action required';
+
+  bool capacityKnown = false;
+  String? capacityText;
+
+  bool nameplatePhotoCaptured = false;
+  File? nameplatePhoto;
+  List<File> extraPhotos = [];
+
+  String? notes;
 }
 
 class FlashingData {
