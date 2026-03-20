@@ -13,9 +13,10 @@ import 'package:claimscope_clean/inspection_report_model.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:claimscope_clean/screens/my_reports_screen.dart';
-import 'package:archive/archive.dart'; // Para ArchiveFile y ZipEncoder
+ // Para ArchiveFile y ZipEncoder
 import 'package:path_provider/path_provider.dart'; // Para getApplicationDocumentsDirectory
 import 'package:share_plus/share_plus.dart'; // Para Share y XFile
+import 'package:claimscope_clean/utils/labeled_photos_zip.dart';
 
 
 enum FacetOrientation {
@@ -362,24 +363,7 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
   return true;
 }
 
- String _sanitizePhotoBaseName(String label) {
-  var s = label.trim();
-
-  // Excluir sufijos comunes para que "extra/additional" se agrupe con el nombre base
-  s = s.replaceAll(RegExp(r'\bextra photo\b', caseSensitive: false), '');
-  s = s.replaceAll(RegExp(r'\badditional photo\b', caseSensitive: false), '');
-  s = s.replaceAll(RegExp(r'\badditional\b', caseSensitive: false), '');
-
-  s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-  // Solo caracteres seguros para nombre de archivo
-  s = s.replaceAll(RegExp(r'[^A-Za-z0-9\-\s_]'), '');
-  s = s.replaceAll(' ', '_');
-
-  if (s.isEmpty) return 'Image';
-  return s;
-}
-
+// here was te fucntions _sanitizedPhotoBaseName and _generateLabeledPhotosZip, moved to utils/labeled_photos_zip.dart
 String _sanitizeFilename(String input) {
   var s = input.trim();
   if (s.isEmpty) return 'UNKNOWN';
@@ -394,24 +378,8 @@ Future<File> _generateLabeledPhotosZip() async {
     return p.label.trim() != 'User Image';
   }).toList();
 
-  final counts = <String, int>{};
-  final archive = Archive();
-
-  for (final item in items) {
-    final base = _sanitizePhotoBaseName(item.label);
-    final n = (counts[base] ?? 0) + 1;
-    counts[base] = n;
-
-    final filename = '${base}_Image$n.jpg';
-    final bytes = await item.file.readAsBytes();
-
-    archive.addFile(ArchiveFile(filename, bytes.length, bytes));
-  }
-
-  final zipBytes = ZipEncoder().encode(archive);
-  if (zipBytes == null) {
-    throw Exception('Could not generate zip.');
-  }
+  final archive = buildLabeledPhotosArchive(items);
+  final zipBytes = encodeZipBytes(archive);
 
   final claim = widget.report.claimNumber.trim().isEmpty
       ? 'NOCLAIM'
@@ -422,9 +390,14 @@ Future<File> _generateLabeledPhotosZip() async {
       : _sanitizeFilename(widget.report.clientName);
 
   final dir = await getApplicationDocumentsDirectory();
-  final zipFile = File('${dir.path}/$claim - $insured - Inspection Photos (ZIP).zip');
+  final filename = '$claim - $insured - Inspection Photos (ZIP).zip';
 
-  await zipFile.writeAsBytes(zipBytes, flush: true);
+  final zipFile = await writeZipToFile(
+    zipBytes: zipBytes,
+    outputDir: dir,
+    filename: filename,
+  );
+
   return zipFile;
 }
 
@@ -1325,7 +1298,7 @@ _formKey.currentState!.save();
 
   Widget buildDropdownOne(String label, List<String> options, String? value, Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       decoration: InputDecoration(labelText: label),
       items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
