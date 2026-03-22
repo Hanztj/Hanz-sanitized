@@ -1687,7 +1687,7 @@ _formKey.currentState!.save();
                 keyboardType: TextInputType.number,
                 onSaved: (val) => estimatedAge = int.tryParse(val ?? '0') ?? 0,
               ),
-
+                    if (widget.report.isResidential == true)
                    const SizedBox(height: 20),
                    const Text(
                         'Additional Structures',
