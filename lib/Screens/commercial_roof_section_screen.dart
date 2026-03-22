@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../catalogs/roof_catalog.dart';
 import '../inspection_report_model.dart';
+import '../utils/photo_labels.dart';
 
 class CommercialRoofSectionScreen extends StatefulWidget {
   final String plan;
@@ -23,6 +27,8 @@ class CommercialRoofSectionScreen extends StatefulWidget {
 
 class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScreen> {
   late final CommercialRoofSectionData roof;
+
+  final _picker = ImagePicker();
 
   final _roofLabelController = TextEditingController();
   final _pitchController = TextEditingController();
@@ -59,6 +65,41 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
 
   bool get _isShingles => roof.roofType == 'Shingles';
 
+  Future<void> _takeCommercialPhoto({
+    required String buildingName,
+    required String roofName,
+    required String photoLabel,
+    required void Function(File file) onSaved,
+  }) async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024,
+      imageQuality: 80,
+    );
+
+    if (picked == null) return;
+
+    final file = File(picked.path);
+    final storedLabel = buildCommercialPhotoLabel(
+      building: buildingName,
+      roof: roofName,
+      label: photoLabel,
+    );
+
+    setState(() {
+      onSaved(file);
+      widget.report.addPhoto(file, storedLabel);
+    });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Photo stored'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _sync() {
     roof.roofLabel = _roofLabelController.text.trim().isEmpty
         ? null
@@ -90,6 +131,8 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
         ? 'Roof ${widget.roofIndex + 1}'
         : roof.roofLabel!.trim();
 
+    final overviewLabel = 'Roof Overview Photo';
+
     final subtypes = subtypesForRoofType(roof.roofType);
 
     return Scaffold(
@@ -107,6 +150,31 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
             ),
             onChanged: (_) => _sync(),
           ),
+
+            const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () => _takeCommercialPhoto(
+              buildingName: buildingName,
+              roofName: roofName,
+              photoLabel: overviewLabel,
+              onSaved: (f) => roof.overviewPhoto = f,
+            ),
+            child: const Text('Take overview photo'),
+          ),
+          TextButton(
+            onPressed: () => _takeCommercialPhoto(
+              buildingName: buildingName,
+              roofName: roofName,
+              photoLabel: '$overviewLabel additional photo',
+              onSaved: (_) {},
+            ),
+            child: const Text('Add additional overview photo'),
+          ),
+          if (roof.overviewPhoto != null) ...[
+            const SizedBox(height: 8),
+            Image.file(roof.overviewPhoto!, height: 140, fit: BoxFit.cover),
+          ],
+
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: roof.roofType,
@@ -244,6 +312,7 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
               },
             ),
           ],
+          
           if (_isFlatSystem) ...[
             const SizedBox(height: 16),
             const Text(
@@ -270,6 +339,37 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
                 });
               },
             ),
+            if (roof.coreSamplePerformed) ...[
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => _takeCommercialPhoto(
+                  buildingName: buildingName,
+                  roofName: roofName,
+                  photoLabel: 'Core Sample Photo',
+                  onSaved: (f) => roof.coreSamplePhoto = f,
+                ),
+                child: const Text('Take core sample photo'),
+              ),
+              TextButton(
+                onPressed: () => _takeCommercialPhoto(
+                  buildingName: buildingName,
+                  roofName: roofName,
+                  photoLabel: 'Core Sample Photo additional photo',
+                  onSaved: (_) {},
+                ),
+                child: const Text('Add additional core sample photo'),
+              ),
+              if (roof.coreSamplePhoto != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Image.file(
+                    roof.coreSamplePhoto!,
+                    height: 140,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+            ],   
+                     
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: roof.deckType,
