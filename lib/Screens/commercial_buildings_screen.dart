@@ -140,3 +140,4 @@ class _CommercialBuildingsScreenState extends State<CommercialBuildingsScreen> {
     );
   }
 }
+
