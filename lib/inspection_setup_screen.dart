@@ -1,25 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
 import 'package:claimscope_clean/roof_inspection_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:claimscope_clean/Services/auth_plan_service.dart';
-import 'package:claimscope_clean/services/stripe_service.dart';
+import 'package:claimscope_clean/Services/stripe_service.dart';
 import 'package:claimscope_clean/screens/my_reports_screen.dart';
+
 import 'inspection_report_model.dart';
+import 'screens/commercial_buildings_screen.dart';
 
 final List<String> usStates = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
-  'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
-  'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-  'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-  'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-  'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
-  'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 
-  'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
-  'West Virginia', 'Wisconsin', 'Wyoming'
+  'Alabama',
+  'Alaska',
+  'Arizona',
+  'Arkansas',
+  'California',
+  'Colorado',
+  'Connecticut',
+  'Delaware',
+  'Florida',
+  'Georgia',
+  'Hawaii',
+  'Idaho',
+  'Illinois',
+  'Indiana',
+  'Iowa',
+  'Kansas',
+  'Kentucky',
+  'Louisiana',
+  'Maine',
+  'Maryland',
+  'Massachusetts',
+  'Michigan',
+  'Minnesota',
+  'Mississippi',
+  'Missouri',
+  'Montana',
+  'Nebraska',
+  'Nevada',
+  'New Hampshire',
+  'New Jersey',
+  'New Mexico',
+  'New York',
+  'North Carolina',
+  'North Dakota',
+  'Ohio',
+  'Oklahoma',
+  'Oregon',
+  'Pennsylvania',
+  'Rhode Island',
+  'South Carolina',
+  'South Dakota',
+  'Tennessee',
+  'Texas',
+  'Utah',
+  'Vermont',
+  'Virginia',
+  'Washington',
+  'West Virginia',
+  'Wisconsin',
+  'Wyoming'
 ];
-
 
 class InspectionSetupScreen extends StatefulWidget {
   final String plan; // 'basico' o 'premium'
@@ -31,52 +72,61 @@ class InspectionSetupScreen extends StatefulWidget {
 }
 
 class _InspectionSetupScreenState extends State<InspectionSetupScreen> {
-Future<void> _handleSubscriptionAndNavigate(InspectionReport report) async {
-  try {
-    final plan = await getUserPlanStatus(forceRefresh: true);
+  Future<void> _handleSubscriptionAndNavigate(InspectionReport report) async {
+    try {
+      final plan = await getUserPlanStatus(forceRefresh: true);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (plan == 'error') {
-      throw Exception('The status of the plan could not be determined..');
-    }
+      if (plan == 'error') {
+        throw Exception('The status of the plan could not be determined..');
+      }
 
-    final isPremium = plan == 'premium';
+      final isPremium = plan == 'premium';
+      final normalizedPlan = isPremium ? 'premium' : 'basic';
 
-    if (inspectRoof) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoofInspectionForm(
-            plan: isPremium ? 'premium' : 'basic',
-             isCommercial: !isResidential, // Pasamos esta info al formulario para ajustar opciones y cálculos
-            report: report,
+      if (!inspectRoof) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Only the Roof form is implemented...'),
           ),
-        ),
-      );
-    } else {
+        );
+        return;
+      }
+
+      if (isResidential) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoofInspectionForm(
+              plan: normalizedPlan,
+              isCommercial: false,
+              report: report,
+            ),
+          ),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CommercialBuildingsScreen(
+              plan: normalizedPlan,
+              report: report,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Only the Roof form is implemented...'),
-        ),
+        SnackBar(content: Text('Error verifying plan: $e')),
       );
-    }
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error verifying plan: $e')),
-    );
-  } finally {
-    if (mounted) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    }
+    } 
   }
-}
 
   bool isResidential = true;
   bool inspectRoof = true;
   bool inspectElevations = false;
- // Mitigation, Restoration, Both
 
   String? _typeOfLoss;
 
@@ -86,7 +136,6 @@ Future<void> _handleSubscriptionAndNavigate(InspectionReport report) async {
   final clientPhone = TextEditingController();
   final clientEmail = TextEditingController();
   final street = TextEditingController();
-  final number = TextEditingController();
   final city = TextEditingController();
   final state = TextEditingController();
   final zip = TextEditingController();
@@ -105,49 +154,43 @@ Future<void> _handleSubscriptionAndNavigate(InspectionReport report) async {
   final insuranceCompanyController = TextEditingController();
 
   void _proceedToInspection() {
-  if (_formKey.currentState!.validate()) {
-    // Creamos el modelo único que viajará por toda la app
-    final report = InspectionReport();
-    
-// CLIENT & CLAIM
-report.clientName = clientName.text;
-report.clientPhone = clientPhone.text;
-report.email = clientEmail.text;
+    if (_formKey.currentState!.validate()) {
+      final report = InspectionReport();
 
-report.address = street.text;    // Street Address
-report.city = city.text;
-report.state = state.text;
-report.zip = zip.text;
+      report.clientName = clientName.text;
+      report.clientPhone = clientPhone.text;
+      report.email = clientEmail.text;
 
-report.claimNumber = claimNumber.text;
-report.policyNumber = policyNumber.text;
+      report.address = street.text;
+      report.city = city.text;
+      report.state = state.text;
+      report.zip = zip.text;
 
-report.dateOfLoss = dateOfLoss.text;
-report.dateInspected = dateInspected.text;
+      report.claimNumber = claimNumber.text;
+      report.policyNumber = policyNumber.text;
 
-report.insuranceCompany = insuranceCompanyController.text; // nueva aseguradora
-report.typeOfLoss = _typeOfLoss ?? '';
-report.causeOfLoss = causeOfLossController.text;
+      report.dateOfLoss = dateOfLoss.text;
+      report.dateInspected = dateInspected.text;
 
-report.isResidential = isResidential;
+      report.insuranceCompany = insuranceCompanyController.text;
+      report.typeOfLoss = _typeOfLoss ?? '';
+      report.causeOfLoss = causeOfLossController.text;
 
-// INSPECTOR
-report.inspectorCompany = company.text;      // ahora aquí
-report.inspectorName = personName.text;
-report.inspectorPhone = personPhone.text;
-report.inspectorEmail = personEmail.text;
+      report.isResidential = isResidential;
 
-// INSPECTION SCOPE
-report.inspectRoof = inspectRoof;
-report.inspectElevations = inspectElevations;
+      report.inspectorCompany = company.text;
+      report.inspectorName = personName.text;
+      report.inspectorPhone = personPhone.text;
+      report.inspectorEmail = personEmail.text;
 
-  // Aquí ya NO navegamos directamente.
-  // Delegamos en _handleSubscriptionAndNavigate para respetar el plan.
-  _handleSubscriptionAndNavigate(report);
+      report.inspectRoof = inspectRoof;
+      report.inspectElevations = inspectElevations;
+
+      _handleSubscriptionAndNavigate(report);
+    }
   }
-}
 
-  final phoneRegex = RegExp(r'^\+?\d{7,15}$');
+  final phoneRegex = RegExp(r'^\+?\d{7,15}');
   final emailRegex = RegExp(
       r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
 
@@ -162,8 +205,7 @@ report.inspectElevations = inspectElevations;
     'Ice Or Snow',
     'Lightning',
     'Tornado',
-    'Other',   
-
+    'Other',
   ];
 
   @override
@@ -178,7 +220,6 @@ report.inspectElevations = inspectElevations;
     clientPhone.dispose();
     clientEmail.dispose();
     street.dispose();
-    number.dispose();
     city.dispose();
     state.dispose();
     zip.dispose();
@@ -195,8 +236,7 @@ report.inspectElevations = inspectElevations;
     super.dispose();
   }
 
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
+  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -213,54 +253,48 @@ report.inspectElevations = inspectElevations;
   @override
   Widget build(BuildContext context) {
     final isBasico = widget.plan == 'basico';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inspection Setup'),
         actions: [
-if (isBasico)
-  TextButton(
-    onPressed: () async {
-      // Capturamos el ScaffoldMessenger antes del await
-      final messenger = ScaffoldMessenger.of(context);
-      try {
-        // Upgrade directo a PREMIUM
-        await StripeService.launchCheckout('premium');
-      } catch (e) {
-        // Aquí ya no usamos `context`, usamos `messenger`
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Stripe Checkout could not be opened: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    },
-                  child: const Text(
-                   'Upgrade',
-                    style: TextStyle(color: Colors.white),
-                   ),
+          if (isBasico)
+            TextButton(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await StripeService.launchCheckout('premium');
+                } catch (e) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Stripe Checkout could not be opened: $e'),
+                      backgroundColor: Colors.red,
                     ),
-                       if (widget.plan == 'premium')
-                      IconButton(
-                              tooltip: 'My Reports',
-                              icon: const Icon(Icons.folder_open),
-                              onPressed: () {
-                              Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const MyReportsScreen()),
-                                );
-                            },
-                           ),
-
-                    IconButton(
-                       icon: const Icon(Icons.logout),
-                         onPressed: () async {
-
-                           final navigator = Navigator.of(context);
-              
-                             await FirebaseAuth.instance.signOut();
-
-                                     if (!mounted) return;
-                                 navigator.popUntil((route) => route.isFirst);
+                  );
+                }
+              },
+              child: const Text(
+                'Upgrade',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          if (widget.plan == 'premium')
+            IconButton(
+              tooltip: 'My Reports',
+              icon: const Icon(Icons.folder_open),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const MyReportsScreen()),
+                );
+              },
+            ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              await FirebaseAuth.instance.signOut();
+              if (!mounted) return;
+              navigator.popUntil((route) => route.isFirst);
             },
           ),
         ],
@@ -269,105 +303,79 @@ if (isBasico)
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Checkbox(
-                  value: isResidential,
-                  onChanged: (_) => setState(() => isResidential = true)),
-              const Text('Residential'),
-              const SizedBox(width: 20),
-              Checkbox(
-                  value: !isResidential,
-                  onChanged: (_) => setState(() => isResidential = false)),
-              const Text('Commercial'),
-            ]),
-
-            const SizedBox(height: 20),
-            const Text('Client Details:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            TextFormField(
-              controller: clientName,
-              decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'Client Name',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
-              validator: (v) => v!.isEmpty ? 'Required' : null,
-            ),
-            TextFormField(
-              controller: clientPhone,
-              decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'Client Phone',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
-              keyboardType: TextInputType.phone,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (v) {
-                if (v == null || v.isEmpty) {
-                  return 'Client Phone is required';
-                }
-                if (!phoneRegex.hasMatch(v)) {
-                  return 'Invalid phone number format';
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: clientEmail,
-              decoration: const InputDecoration(labelText: 'Client Email'),
-              keyboardType: TextInputType.emailAddress,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (v) {
-                if (v != null && v.isNotEmpty) {
-                  if (!emailRegex.hasMatch(v)) {
-                    return 'Invalid email format';
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Checkbox(
+                    value: isResidential,
+                    onChanged: (_) => setState(() => isResidential = true),
+                  ),
+                  const Text('Residential'),
+                  const SizedBox(width: 20),
+                  Checkbox(
+                    value: !isResidential,
+                    onChanged: (_) => setState(() => isResidential = false),
+                  ),
+                  const Text('Commercial'),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Client Details:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextFormField(
+                controller: clientName,
+                decoration: const InputDecoration(labelText: 'Client Name *'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: clientPhone,
+                decoration: const InputDecoration(labelText: 'Client Phone *'),
+                keyboardType: TextInputType.phone,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Client Phone is required';
                   }
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-            const Text('Property Address:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            TextFormField(
-              controller: street,
-              decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'Street Address',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
-              validator: (v) => v!.isEmpty ? 'Required' : null,
-            ),
-
-            TextFormField(
-              controller: city,
-              decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'City',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
-              validator: (v) => v!.isEmpty ? 'Required' : null,
-            ),
-            Autocomplete<String>(
+                  if (!phoneRegex.hasMatch(v)) {
+                    return 'Invalid phone number format';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: clientEmail,
+                decoration: const InputDecoration(labelText: 'Client Email'),
+                keyboardType: TextInputType.emailAddress,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    if (!emailRegex.hasMatch(v)) {
+                      return 'Invalid email format';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Property Address:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              TextFormField(
+                controller: street,
+                decoration: const InputDecoration(labelText: 'Street Address *'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: city,
+                decoration: const InputDecoration(labelText: 'City *'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              Autocomplete<String>(
               
               optionsBuilder: (TextEditingValue textEditingValue) {
                 if (textEditingValue.text == '') {
@@ -386,14 +394,14 @@ if (isBasico)
                   controller: textEditingController,
                   focusNode: focusNode,
                   decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'State',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
+                  label: RichText(
+                   text: const TextSpan(
+                    text: 'State',
+                     style: TextStyle(fontSize: 16, color: Colors.black),
+                       children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
+                         ),
+                        ),
+                 ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'State is required';
@@ -412,204 +420,174 @@ if (isBasico)
                 state.text = selection;
               },
             ),
-            TextFormField(
-              controller: zip,
-              decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'Zip Code',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
-              validator: (v) => v!.isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 20),
-            const Text('Claim Information:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            TextFormField(
-                controller: claimNumber,
-                decoration:
-                    const InputDecoration(labelText: 'Claim Number')),
-            TextFormField(
-                controller: policyNumber,
-                decoration:
-                    const InputDecoration(labelText: 'Policy Number')),
-                    TextFormField(
-                   controller: insuranceCompanyController,
-                   decoration: const InputDecoration(labelText: 'Insurance Company'),
-                      ),
-            TextFormField(
-              controller: dateOfLoss,
-           decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'Date of Loss',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-  suffixIcon: IconButton(
-    icon: const Icon(Icons.calendar_today),
-    onPressed: () => _selectDate(context, dateOfLoss),
-  ),
-),
-              readOnly: true,
-              validator: (v) =>
-                  v!.isEmpty ? 'Date of Loss is required' : null,
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: _typeOfLoss,
-              decoration: InputDecoration(
-  label: RichText(
-    text: const TextSpan(
-      text: 'Type of Loss',
-      style: TextStyle(fontSize: 16, color: Colors.black),
-      children: [TextSpan(text: ' *', style: TextStyle(color: Colors.orange))],
-    ),
-  ),
-),
-              hint: const Text('Select Type of Loss'),
-              items: lossTypes.map((String type) {
-                return DropdownMenuItem<String>(
-                  value: type,
-                  child: Text(type),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _typeOfLoss = newValue;
-                });
-              },
-              validator: (v) =>
-                  v == null ? 'Type of Loss is required' : null,
-            ),
-            TextFormField(
-              controller: causeOfLossController,
-              decoration: const InputDecoration(
-                labelText: 'Cause of Loss (Comments)',
-                alignLabelWithHint: true,
+              TextFormField(
+                controller: zip,
+                decoration: const InputDecoration(labelText: 'Zip Code *'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
-              maxLines: 3,
-              keyboardType: TextInputType.multiline,
-            ),
-            const SizedBox(height: 20),
-            const Text('Personal Info:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            TextFormField(
+              const SizedBox(height: 20),
+              const Text(
+                'Claim Information:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextFormField(
+                controller: claimNumber,
+                decoration: const InputDecoration(labelText: 'Claim Number'),
+              ),
+              TextFormField(
+                controller: policyNumber,
+                decoration: const InputDecoration(labelText: 'Policy Number'),
+              ),
+              TextFormField(
+                controller: insuranceCompanyController,
+                decoration: const InputDecoration(labelText: 'Insurance Company'),
+              ),
+              TextFormField(
+                controller: dateOfLoss,
+                decoration: InputDecoration(
+                  labelText: 'Date of Loss *',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context, dateOfLoss),
+                  ),
+                ),
+                readOnly: true,
+                validator: (v) => v!.isEmpty ? 'Date of Loss is required' : null,
+              ),
+              DropdownButtonFormField<String>(
+                initialValue: _typeOfLoss,
+                decoration: const InputDecoration(labelText: 'Type of Loss *'),
+                hint: const Text('Select Type of Loss'),
+                items: lossTypes
+                    .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                    .toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _typeOfLoss = newValue;
+                  });
+                },
+                validator: (v) => v == null ? 'Type of Loss is required' : null,
+              ),
+              TextFormField(
+                controller: causeOfLossController,
+                decoration: const InputDecoration(
+                  labelText: 'Cause of Loss (Comments)',
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 3,
+                keyboardType: TextInputType.multiline,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Personal Info:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextFormField(
                 controller: company,
-                decoration: const InputDecoration(labelText: 'Company')),
-            TextFormField(
+                decoration: const InputDecoration(labelText: 'Company'),
+              ),
+              TextFormField(
                 controller: personName,
-                decoration: const InputDecoration(labelText: 'Name')),
-            TextFormField(
-              controller: personPhone,
-              decoration: const InputDecoration(labelText: 'Phone'),
-              keyboardType: TextInputType.phone,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (v) {
-                if (v != null && v.isNotEmpty) {
-                  if (!phoneRegex.hasMatch(v)) {
-                    return 'Invalid phone number format';
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextFormField(
+                controller: personPhone,
+                decoration: const InputDecoration(labelText: 'Phone'),
+                keyboardType: TextInputType.phone,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    if (!phoneRegex.hasMatch(v)) {
+                      return 'Invalid phone number format';
+                    }
                   }
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: personEmail,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (v) {
-                if (v != null && v.isNotEmpty) {
-                  if (!emailRegex.hasMatch(v)) {
-                    return 'Invalid email format';
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: personEmail,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    if (!emailRegex.hasMatch(v)) {
+                      return 'Invalid email format';
+                    }
                   }
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: dateInspected,
-              decoration: InputDecoration(
-                labelText: 'Date Inspected',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () =>
-                      _selectDate(context, dateInspected),
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: dateInspected,
+                decoration: InputDecoration(
+                  labelText: 'Date Inspected',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context, dateInspected),
+                  ),
+                ),
+                readOnly: true,
+                validator: (v) => v!.isEmpty ? 'Date Inspected is required' : null,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Inspection of:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              CheckboxListTile(
+                title: const Text('Roof estimate'),
+                value: inspectRoof,
+                onChanged: (v) => setState(() => inspectRoof = v ?? false),
+              ),
+              CheckboxListTile(
+                title: const Text('Elevations'),
+                value: inspectElevations,
+                onChanged: (v) => setState(() => inspectElevations = v ?? false),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final currentUser = FirebaseAuth.instance.currentUser;
+
+                    if (currentUser == null) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: User not authenticated.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (!_formKey.currentState!.validate()) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please correct the errors in the form.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Checking subscription status...'),
+                      ),
+                    );
+
+                    _proceedToInspection();
+                  },
+                  child: const Text('Continue'),
                 ),
               ),
-              readOnly: true,
-              validator: (v) =>
-                  v!.isEmpty ? 'Date Inspected is required' : null,
-            ),
-
-            const SizedBox(height: 20),
-            const Text('Inspection of:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            CheckboxListTile(
-              title: const Text('Roof estimate'),
-              value: inspectRoof,
-              onChanged: (v) => setState(() => inspectRoof = v!),
-            ),
-            CheckboxListTile(
-              title: const Text('Elevations'),
-              value: inspectElevations,
-              onChanged: (v) {
-                setState(() {
-                  inspectElevations = v!;
-                });
-              },
-            ),
-        
-            const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-onPressed: () async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-
-  if (currentUser == null) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Error: User not authenticated.'),
-      ),
-    );
-    return;
-  }
-
-  if (!_formKey.currentState!.validate()) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please correct the errors in the form.'),
-      ),
-    );
-    return;
-  }
-
-  if (!mounted) return;
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Checking subscription status...'),
-    ),
-  );
-
-  // Ahora solo construimos el report y dejamos que _handleSubscription... navegue
-  _proceedToInspection();
-},
-                child: const Text('Continue'),
-              ),
-            ),
-          ]),
+            ],
+          ),
         ),
       ),
     );
   }
-
-
-  
 }
