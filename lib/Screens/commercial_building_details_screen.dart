@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../inspection_report_model.dart';
-import 'package:claimscope_clean/Screens/commercial_roof_section_screen.dart';
+import 'commercial_roof_section_screen.dart';
 
 class CommercialBuildingDetailScreen extends StatefulWidget {
   final String plan;
@@ -30,6 +30,15 @@ class _CommercialBuildingDetailScreenState extends State<CommercialBuildingDetai
   void initState() {
     super.initState();
     building = widget.report.commercialBuildings[widget.buildingIndex];
+
+    if (building.roofs.isEmpty) {
+      building.roofs.add(CommercialRoofSectionData()..roofLabel = 'Main Roof');
+    } else {
+      final label = (building.roofs.first.roofLabel ?? '').trim();
+      if (label.isEmpty) {
+        building.roofs.first.roofLabel = 'Main Roof';
+      }
+    }
 
     _nameController.text = building.name ?? '';
     _streetController.text = building.streetAddress ?? '';
@@ -63,17 +72,23 @@ class _CommercialBuildingDetailScreenState extends State<CommercialBuildingDetai
     setState(() {
       building.roofs.add(CommercialRoofSectionData());
     });
+  }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CommercialRoofSectionScreen(
-          plan: widget.plan,
-          report: widget.report,
-          buildingIndex: widget.buildingIndex,
-          roofIndex: building.roofs.length - 1,
-        ),
-      ),
-    );
+  void _deleteRoofSection(int roofIndex) {
+    setState(() {
+      if (building.roofs.length <= 1) {
+        building.roofs = [CommercialRoofSectionData()..roofLabel = 'Main Roof'];
+        return;
+      }
+
+      building.roofs.removeAt(roofIndex);
+      if (building.roofs.isNotEmpty) {
+        final firstLabel = (building.roofs.first.roofLabel ?? '').trim();
+        if (firstLabel.isEmpty) {
+          building.roofs.first.roofLabel = 'Main Roof';
+        }
+      }
+    });
   }
 
   @override
@@ -129,30 +144,50 @@ class _CommercialBuildingDetailScreenState extends State<CommercialBuildingDetai
                 building.hasMultipleRoofTypes = v ?? false;
                 if (!building.hasMultipleRoofTypes) {
                   if (building.roofs.isEmpty) {
-                     building.roofs.add(CommercialRoofSectionData());
+                    building.roofs.add(CommercialRoofSectionData()..roofLabel = 'Main Roof');
                   } else if (building.roofs.length > 1) {
                     building.roofs = [building.roofs.first];
                   }
                 } else {
                   if (building.roofs.isEmpty) {
-                    building.roofs.add(CommercialRoofSectionData());
+                    building.roofs.add(CommercialRoofSectionData()..roofLabel = 'Main Roof');
                   }
                 }
               });
             },
           ),
           if (building.hasMultipleRoofTypes) ...[
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: _addRoofSection,
-            child: Text(building.roofs.isEmpty ? 'Add roof section' : 'Add another roof section'),
-          ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _addRoofSection,
+              child: const Text('Add another roof section'),
+            ),
           ],
           const SizedBox(height: 12),
           if (building.roofs.isNotEmpty) ...[
             const Divider(),
             const Text('Roof sections', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  _sync();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CommercialRoofSectionScreen(
+                        plan: widget.plan,
+                        report: widget.report,
+                        buildingIndex: widget.buildingIndex,
+                        roofIndex: 0,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Continue to roof details'),
+              ),
+            ),
+            const SizedBox(height: 12),
             ...building.roofs.asMap().entries.map((entry) {
               final idx = entry.key;
               final roof = entry.value;
@@ -168,8 +203,44 @@ class _CommercialBuildingDetailScreenState extends State<CommercialBuildingDetai
               return Card(
                 child: ListTile(
                   title: Text(roofName),
-                  subtitle: Text(subtitle.isEmpty ? 'Not set' : subtitle),
-                  trailing: const Icon(Icons.chevron_right),
+                  subtitle: subtitle.isEmpty ? null : Text(subtitle),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (idx > 0)
+                        IconButton(
+                          tooltip: 'Delete roof section',
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) {
+                                return AlertDialog(
+                                  title: const Text('Delete roof section?'),
+                                  content: Text('Delete $roofName?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirmed != true) return;
+                            if (!context.mounted) return;
+
+                            _deleteRoofSection(idx);
+                          },
+                        ),
+                      const Icon(Icons.chevron_right),
+                    ],
+                  ),
                   onTap: () {
                     _sync();
                     Navigator.of(context).push(
