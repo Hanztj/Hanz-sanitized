@@ -129,7 +129,7 @@ class _CommercialBuildingDetailScreenState extends State<CommercialBuildingDetai
                 building.hasMultipleRoofTypes = v ?? false;
                 if (!building.hasMultipleRoofTypes) {
                   if (building.roofs.isEmpty) {
-                    building.roofs.add(CommercialRoofSectionData());
+                     building.roofs.add(CommercialRoofSectionData());
                   } else if (building.roofs.length > 1) {
                     building.roofs = [building.roofs.first];
                   }
@@ -141,11 +141,13 @@ class _CommercialBuildingDetailScreenState extends State<CommercialBuildingDetai
               });
             },
           ),
+          if (building.hasMultipleRoofTypes) ...[
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: _addRoofSection,
             child: Text(building.roofs.isEmpty ? 'Add roof section' : 'Add another roof section'),
           ),
+          ],
           const SizedBox(height: 12),
           if (building.roofs.isNotEmpty) ...[
             const Divider(),
