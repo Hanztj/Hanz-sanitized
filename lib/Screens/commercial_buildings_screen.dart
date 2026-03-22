@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../inspection_report_model.dart';
-import 'package:claimscope_clean/Screens/commercial_building_details_screen.dart';
+import 'commercial_building_details_screen.dart';
 
 class CommercialBuildingsScreen extends StatefulWidget {
   final String plan;
@@ -18,28 +18,15 @@ class CommercialBuildingsScreen extends StatefulWidget {
 }
 
 class _CommercialBuildingsScreenState extends State<CommercialBuildingsScreen> {
-  final _countController = TextEditingController(text: '1');
-
   @override
-  void dispose() {
-    _countController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    if (widget.report.commercialBuildings.isEmpty) {
+      widget.report.commercialBuildings.add(CommercialBuildingData());
+    }
   }
 
-  void _createBuildings() {
-    final n = int.tryParse(_countController.text.trim());
-    if (n == null || n <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid number of buildings.')),
-      );
-      return;
-    }
-
-    setState(() {
-      widget.report.commercialBuildings =
-          List.generate(n, (_) => CommercialBuildingData());
-    });
-
+  void _continue() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CommercialBuildingDetailScreen(
@@ -69,75 +56,89 @@ class _CommercialBuildingsScreenState extends State<CommercialBuildingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'How many buildings are on this project?',
+              'Buildings',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _countController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Number of buildings',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _createBuildings,
-              child: const Text('Continue'),
-            ),
-            const SizedBox(height: 16),
-            if (widget.report.commercialBuildings.isNotEmpty) ...[
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Buildings',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: _addAnotherBuilding,
-                    child: const Text('Add another building'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: widget.report.commercialBuildings.length,
-                  itemBuilder: (ctx, idx) {
-                    final b = widget.report.commercialBuildings[idx];
-                    return Card(
-                      child: ListTile(
-                        title: Text(b.displayName(idx)),
-                        subtitle: Text(
-                          b.roofs.isEmpty
-                              ? 'Not started'
-                              : '${b.roofs.length} roof section(s)',
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => CommercialBuildingDetailScreen(
-                                plan: widget.plan,
-                                report: widget.report,
-                                buildingIndex: idx,
-                              ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.report.commercialBuildings.length,
+                itemBuilder: (ctx, idx) {
+                  final b = widget.report.commercialBuildings[idx];
+                  return Card(
+                    child: ListTile(
+                      title: Text(b.displayName(idx)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (idx > 0)
+                            IconButton(
+                              tooltip: 'Delete building',
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) {
+                                    return AlertDialog(
+                                      title: const Text('Delete building?'),
+                                      content: Text('Delete ${b.displayName(idx)}?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(ctx).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(ctx).pop(true),
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (confirmed != true) return;
+                                if (!mounted) return;
+
+                                setState(() {
+                                  widget.report.commercialBuildings.removeAt(idx);
+                                });
+                              },
                             ),
-                          );
-                        },
+                          const Icon(Icons.chevron_right),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CommercialBuildingDetailScreen(
+                              plan: widget.plan,
+                              report: widget.report,
+                              buildingIndex: idx,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
-            ],
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _addAnotherBuilding,
+              child: const Text('Add another building'),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _continue,
+                child: const Text('Continue'),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
