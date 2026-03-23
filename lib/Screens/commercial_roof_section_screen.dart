@@ -33,6 +33,7 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
 
   final _roofLabelController = TextEditingController();
   final _pitchController = TextEditingController();
+  final _facetCountController = TextEditingController();
   final _deckOtherController = TextEditingController();
   final _deckThicknessGaugeController = TextEditingController();
   final _deckPartialSqftController = TextEditingController();
@@ -84,6 +85,7 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
 
     _roofLabelController.text = roof.roofLabel ?? '';
     _pitchController.text = roof.pitch ?? '';
+    _facetCountController.text = roof.facetCount.toString();
     _deckOtherController.text = roof.deckTypeOtherSpecify ?? '';
     _deckThicknessGaugeController.text = roof.deckThicknessGauge ?? '';
     _deckPartialSqftController.text = roof.deckPartialReplacementSqft ?? '';
@@ -96,6 +98,7 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
   void dispose() {
     _roofLabelController.dispose();
     _pitchController.dispose();
+    _facetCountController.dispose();
     _deckOtherController.dispose();
     _deckThicknessGaugeController.dispose();
     _deckPartialSqftController.dispose();
@@ -154,6 +157,13 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
         ? null
         : _pitchController.text.trim();
 
+    final facetCount = int.tryParse(_facetCountController.text.trim());
+    if (facetCount != null && facetCount > 0) {
+      roof.facetCount = facetCount;
+    } else {
+      roof.facetCount = 1;
+    }
+
     roof.deckTypeOtherSpecify = _deckOtherController.text.trim().isEmpty
         ? null
         : _deckOtherController.text.trim();
@@ -188,6 +198,9 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
     final overviewLabel = 'Roof Overview Photo';
 
     final subtypes = subtypesForRoofType(roof.roofType);
+    if (roof.roofSubType != null && !subtypes.contains(roof.roofSubType)) {
+      roof.roofSubType = null;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -246,6 +259,7 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
 
                 // Reset type-specific fields when switching.
                 roof.metalStyle = null;
+                roof.metalHasFacets = null;
                 roof.pitch = null;
                 roof.facetCount = 1;
 
@@ -271,8 +285,11 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
                 roof.noCoreSampleApproach = null;
 
                 _pitchController.clear();
+                _facetCountController.text = '1';
                 _deckOtherController.clear();
                 _coverOtherController.clear();
+                _coverOtherController.clear();
+
               });
             },
           ),
@@ -312,37 +329,62 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
                   roof.metalStyle = val;
                   if (val == 'Gable') {
                     roof.facetCount = 2;
+                    _facetCountController.text = '2';
+                  }
+                  if (val == 'Flat') {
+                    roof.facetCount = 1;
+                    _facetCountController.text = '1';
+                    roof.metalHasFacets = null;
                   }
                 });
               },
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _pitchController,
-              decoration: const InputDecoration(
-                labelText: 'Pitch (optional)',
-                border: OutlineInputBorder(),
+            if (roof.metalStyle != 'Flat') ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pitchController,
+                decoration: const InputDecoration(
+                  labelText: 'Pitch (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_) => _sync(),
               ),
-              onChanged: (_) => _sync(),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              initialValue: roof.facetCount,
-              decoration: const InputDecoration(
-                labelText: 'How many facets?',
-                border: OutlineInputBorder(),
+            ],
+            if (roof.metalStyle == 'Other') ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<bool>(
+                initialValue: roof.metalHasFacets,
+                decoration: const InputDecoration(
+                  labelText: 'Has facets?',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: true, child: Text('Yes')),
+                  DropdownMenuItem(value: false, child: Text('No')),
+                ],
+                onChanged: (val) {
+                  setState(() {
+                    roof.metalHasFacets = val;
+                    if (val != true) {
+                      roof.facetCount = 1;
+                      _facetCountController.text = '1';
+                    }
+                  });
+                },
               ),
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1')),
-                DropdownMenuItem(value: 2, child: Text('2')),
-                DropdownMenuItem(value: 3, child: Text('3')),
-              ],
-              onChanged: (val) {
-                setState(() {
-                  roof.facetCount = val ?? 1;
-                });
-              },
-            ),
+            ],
+            if (roof.metalStyle == 'Gable' || roof.metalHasFacets == true) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _facetCountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Facet count',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_) => _sync(),
+              ),
+            ],
           ],
           if (_isShingles) ...[
             const SizedBox(height: 12),
@@ -355,22 +397,14 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
               onChanged: (_) => _sync(),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              initialValue: roof.facetCount,
+            TextField(
+              controller: _facetCountController,
+              keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'How many facets?',
+                labelText: 'Facet count',
                 border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1')),
-                DropdownMenuItem(value: 2, child: Text('2')),
-                DropdownMenuItem(value: 3, child: Text('3')),
-              ],
-              onChanged: (val) {
-                setState(() {
-                  roof.facetCount = val ?? 1;
-                });
-              },
+              onChanged: (_) => _sync(),
             ),
           ],
           
@@ -809,6 +843,16 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
                 return ElevatedButton(
                   onPressed: () async {
                     _sync();
+
+                    if (roof.overviewPhoto == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please add an overview photo.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
 
                     if (isFinalStep) {
                       setState(() {
