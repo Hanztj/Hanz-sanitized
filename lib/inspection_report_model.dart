@@ -5,7 +5,7 @@ class InspectionReport {
   String clientName = '';
   String clientPhone = '';
   String email = '';
-  String address = ''; // Street Address (calle + número)
+  String address = '';
   String city = '';
   String state = '';
   String zip = '';
@@ -13,15 +13,13 @@ class InspectionReport {
   String policyNumber = '';
   String dateOfLoss = '';
   String dateInspected = '';
-  String insuranceCompany = ''; // aseguradora
+  String insuranceCompany = '';
   String typeOfLoss = '';
   String causeOfLoss = '';
   bool isResidential = true;
-  bool iceAndWaterBarrierInstalled = false;
-  File? iceAndWaterBarrierPhoto;
 
   // INSPECTOR
-  String inspectorCompany = '';  // empresa que inspecciona
+  String inspectorCompany = '';
   String inspectorName = '';
   String inspectorPhone = '';
   String inspectorEmail = '';
@@ -30,9 +28,9 @@ class InspectionReport {
   bool inspectRoof = true;
   bool inspectElevations = false;
   bool inspectInterior = false;
-  String interiorScope = ''; // 'Mitigation', 'Restoration', 'Both' o ''
+  String interiorScope = '';
 
-  // ROOF FORM
+  // ROOF FORM (residential legacy)
   String? roofCoverType;
   String? roofSubType;
   int? estimatedAge;
@@ -47,6 +45,9 @@ class InspectionReport {
   File? frontElevationPhoto;
   File? dripEdgePhoto;
 
+  bool iceAndWaterBarrierInstalled = false;
+  File? iceAndWaterBarrierPhoto;
+
   bool starterRowInstalled = false;
   bool starterEaveInstalled = false;
   bool starterRakeInstalled = false;
@@ -54,22 +55,20 @@ class InspectionReport {
   File? starterEavePhoto;
   File? starterRakePhoto;
 
-      // Roof replacement scope
   bool fullRoofReplacementRequired = false;
-  String? partialReplacementSqft; // texto tal cual, ej: "250"
+  String? partialReplacementSqft;
 
-  // Sheathing replacement scope
   bool sheathingRequiredToBeChanged = false;
   bool sheathingFullReplacementRequired = false;
-  String? sheathingPartialReplacementSqft; // ej: "120"
-  String? sheathingType;  // 'OSB' o 'CDX'
-  String? sheathingSize;  // '1/2"' o '5/8"'
-  
+  String? sheathingPartialReplacementSqft;
+  String? sheathingType;
+  String? sheathingSize;
+
   // REPORT CONTENT
-  List<PhotoItem> photoReportItems = [];
+  final List<PhotoItem> photoReportItems = [];
   List<FacetData> facets = [];
 
-   // COMMERCIAL
+  // COMMERCIAL
   List<CommercialBuildingData> commercialBuildings = [];
 
   void addPhoto(File file, String label) {
@@ -112,13 +111,22 @@ class CommercialRoofSectionData {
 
   // Metal
   String? metalStyle; // Flat / Gable / Other
+  bool? metalHasFacets; // Only used when metalStyle == 'Other'
 
   // Flat systems
   bool coreSamplePerformed = false;
   File? coreSamplePhoto;
 
-  String? deckType; // Metal/Concrete/Wood/Other
+  bool? insulationKnown;
+
+  // Deck replacement (flat systems)
+  bool deckChangeRequired = false;
+  bool deckFullReplacementRequired = false;
+  String? deckPartialReplacementSqft;
+
+  String? deckType; // Metal/Wood/Other
   String? deckTypeOtherSpecify;
+  String? deckThicknessGauge;
 
   String? insulationMaterial; // ISO/EPS/XPS/Mineral Wool
   String? insulationThickness;
@@ -129,9 +137,7 @@ class CommercialRoofSectionData {
   String? coverBoardOtherSpecify;
   String? coverBoardThickness; // 1/4" / 1/2"
 
-  String? attachmentMethod; // Mechanical / Adhered / Ballasted
-
-  // Only when coreSamplePerformed == false
+  // Only when coreSamplePerformed == false && insulationKnown == false
   String? noCoreSampleApproach; // 'EnergyCode' or 'BidItem'
 
   File? overviewPhoto;
@@ -173,12 +179,12 @@ class HvacUnitData {
 }
 
 class FlashingData {
-  String type;             // Step flashing, Ridge flashing, etc.
-  String? material;        // Metal, Copper
-  String? size;            // 14", 20", Small, Average, Large, Standard, ...
-  String? finish;          // Mill finish, Color finish
-  String? grade;           // Standard, High grade
-  String? otherSpecify;    // Only when type == "Other"
+  String type;
+  String? material;
+  String? size;
+  String? finish;
+  String? grade;
+  String? otherSpecify;
   bool shouldBeChanged;
 
   FlashingData({
@@ -193,12 +199,12 @@ class FlashingData {
 }
 
 class VentData {
-  String type;          // ej: "Turtle vent Metal", "Pipe jack", "Other"
-  String? count;        // texto tal como se ingresa, ej: "3"
+  String type;
+  String? count;
   bool shouldBeChanged;
   bool includeSplitBoot;
   bool includeLead;
-  String? otherSpecify; // texto libre cuando type == "Other"
+  String? otherSpecify;
 
   VentData({
     required this.type,
@@ -210,12 +216,11 @@ class VentData {
   });
 }
 
- class FacetData {
+class FacetData {
   String name;
   String orientation;
   String? pitch;
 
-  // Ridge Vent (POR FACETA)
   bool hasRidgeVent;
   String? ridgeVentType;
   File? ridgeVentPhoto;
@@ -236,11 +241,9 @@ class VentData {
     required this.name,
     required this.orientation,
     this.pitch,
-
     this.hasRidgeVent = false,
     this.ridgeVentType,
     this.ridgeVentPhoto,
-
     this.atrPerformed = false,
     this.atrResult,
     this.hasValleyMetal = false,
@@ -251,14 +254,15 @@ class VentData {
     this.comment,
   });
 }
-    class OtherElementData {
-    String type;               // Snow guard/stop, Skylight, etc.
-    String? count;             // texto numérico
-    bool shouldBeChanged;
-    bool detachAndResetOnly;   // uno u otro, no ambos
-    String? otherSpecify;      // solo cuando type == "Other"
 
-   OtherElementData({
+class OtherElementData {
+  String type;
+  String? count;
+  bool shouldBeChanged;
+  bool detachAndResetOnly;
+  String? otherSpecify;
+
+  OtherElementData({
     required this.type,
     this.count,
     this.shouldBeChanged = false,
