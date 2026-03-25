@@ -104,10 +104,39 @@ class CommercialRoofSectionData {
   String? roofLabel;
   String? roofType;
   String? roofSubType;
+  String? roofSubTypeOtherSpecify;
+
+  // When shingles/metal uses facets, we split into multiple roof sections.
+  bool facetsGenerated = false;
+  int? facetGroupTotal;
+  int? facetIndex;
 
   // Shingles/Metal simplification
   String? pitch;
+  bool hasMultipleFacets = false;
   int facetCount = 1;
+
+  // Shingles hub fields (per roof section)
+  bool? hasMultipleLayers;
+  int? numberOfLayers;
+
+  bool starterRowInstalled = false;
+  bool starterEaveInstalled = false;
+  bool starterRakeInstalled = false;
+  File? starterEavePhoto;
+  File? starterRakePhoto;
+
+  bool hasDripEdge = false;
+  String? dripEdgeType;
+  File? dripEdgePhoto;
+
+  bool iceAndWaterBarrierInstalled = false;
+  File? iceAndWaterBarrierPhoto;
+
+  bool hasRidge = false;
+  bool hasRidgeVent = false;
+  String? ridgeVentType;
+  File? ridgeVentPhoto;
 
   // Metal
   String? metalStyle; // Flat / Gable / Other
