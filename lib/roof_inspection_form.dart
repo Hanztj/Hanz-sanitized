@@ -17,6 +17,11 @@ import 'package:claimscope_clean/screens/my_reports_screen.dart';
 import 'package:path_provider/path_provider.dart'; // Para getApplicationDocumentsDirectory
 import 'package:share_plus/share_plus.dart'; // Para Share y XFile
 import 'package:claimscope_clean/utils/labeled_photos_zip.dart';
+import 'package:claimscope_clean/catalogs/roof_catalog.dart';
+import 'package:claimscope_clean/catalogs/roof_components_catalog.dart';
+import 'package:claimscope_clean/screens/residential/hubs/residential_shingles_hub.dart';
+import 'package:claimscope_clean/screens/residential/hubs/residential_roof_accessories_hub.dart';
+import 'package:claimscope_clean/screens/residential/hubs/residential_facet_inspection_hub.dart';
 
 
 enum FacetOrientation {
@@ -1337,56 +1342,8 @@ _formKey.currentState!.save();
   @override
   Widget build(BuildContext context) {
     
-    final List<String> roofTypes = [
-      'Shingles',
-      'Metal',
-      'Tile roofing',
-      'Wood Shake',
-      'Slate Roof',
-      'TPO',
-      'Modified Bitumen',
-      'EPDM',
-      'Roll Roofing',
-      'Other',
-    ];
-
-    final Map<String, List<String>> subTypes = {
-      'Shingles': ['Laminated', '3 Tab'],
-      'Metal': [
-        'Standing seam',
-        'Corrugated',
-        'Ribbed',
-        'Wall/Roof Panel corrugated',
-        'Other'
-      ],
-      'Tile roofing': ['Concrete', 'Clay'],
-      'Wood Shake': ['Medium (1/2”)', 'Heavy (3/4”)'],
-      'Slate Roof': ['Slate roofing (12 to 18) in', 'Slate roofing (12 to 24) in'],
-      'TPO': [
-        'Fully adhered system > 45 mil',
-        'Fully adhered system > 60 mil',
-        'Mech Att > 45 mil',
-        'Mech Att > 60 mil',
-        'Perimeter Adhered system > 45 mil',
-        'Perimeter Adhered system > 60 mil',
-      ],
-      'Modified Bitumen': ['Hot mopped', 'Self-adhering'],
-      'EPDM': [
-        'Fully adhered system > 45 mil',
-        'Fully adhered system > 60 mil',
-        'Fully adhered system > 75 mil',
-        'Fully adhered system > 90 mil',
-        'Mech Att > 45 mil',
-        'Mech Att > 60 mil',
-        'Mech Att > 75 mil',
-        'Mech Att > 90 mil',
-        'Perimeter Adhered system > 45 mil',
-        'Perimeter Adhered system > 60 mil',
-        'Perimeter Adhered system > 75 mil',
-        'Perimeter Adhered system > 90 mil',
-      ],
-      'Roll Roofing': ['Hot mopped', 'Self-adhering'],
-    };
+    final List<String> roofTypes = roofTypesForFlow(isCommercial: widget.isCommercial);
+    final Map<String, List<String>> subTypes = roofSubtypesByType;
 
     final List<String> gaugeOptions = ['24', '26', '29', 'Other'];
 
@@ -1399,13 +1356,7 @@ _formKey.currentState!.save();
       'Valley metal copper',
       'Valley metal painted'
     ];
-    final List<String> ventTypes = [
-      'Turtle vent Metal', 'Turtle vent Plastic', 'Pipe jack',
-      'Exhaust through the roof up to 4”', 'Exhaust through the roof 6” to 8”',
-      'Off ridge type 2”', 'Off ridge type 4”', 'Power attic vent',
-      'Furnace Vent 5”', 'Furnace Vent 6”', 'Furnace Vent 8”',
-      'Turbine type', 'Other'
-    ];
+    
 
   final isBasico = widget.plan != 'premium'; // muestra Upgrade para free/básico
 
@@ -1532,118 +1483,39 @@ _formKey.currentState!.save();
                 }),
 
 
- if (roofCoverType == 'Shingles') ...[
-                const SizedBox(height: 20),
- RichText(
-  text: const TextSpan(
-    text: 'Roof Replacement Scope',
-    style: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-    children: [
-      TextSpan(
-        text: ' *',
-        style: TextStyle(color: Colors.orange),
-      ),
-    ],
-  ),
-),
- const Divider(),
-
- // Full roof replacement (roof cover)
- CheckboxListTile(
-  title: const Text('Required full roof replacement?'),
-  value: fullRoofReplacementRequired,
-  onChanged: (val) {
-    setState(() {
-      fullRoofReplacementRequired = val ?? false;
-      if (fullRoofReplacementRequired) {
-        _partialReplacementSqftController.clear();
-        partialReplacementSqft = null;
-      }
-    });
-  },
- ),
-
- if (!fullRoofReplacementRequired)
-  TextFormField(
-    controller: _partialReplacementSqftController,
-    decoration: const InputDecoration(
-      labelText: 'How many SF of shingles require replacement?',
-    ),
-    keyboardType: TextInputType.number,
-    onSaved: (val) => partialReplacementSqft = val,
-  ),
- const SizedBox(height: 10),
-
- // Sheathing
- CheckboxListTile(
-  title: const Text('Sheathing required to be changed?'),
-  value: sheathingRequiredToBeChanged,
-  onChanged: (val) {
-    setState(() {
-      sheathingRequiredToBeChanged = val ?? false;
-      if (!sheathingRequiredToBeChanged) {
-        sheathingFullReplacementRequired = false;
-        _sheathingPartialSqftController.clear();
-        sheathingPartialReplacementSqft = null;
-        sheathingType = null;
-        sheathingSize = null;
-      }
-    });
-  },
- ),
-
- if (sheathingRequiredToBeChanged)
-  Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Sheathing full/partial
- CheckboxListTile(
-  title: const Text('Sheathing full replacement required?'),
-  value: sheathingFullReplacementRequired,
-  onChanged: (val) {
-    setState(() {
-      sheathingFullReplacementRequired = val ?? false;
-      if (sheathingFullReplacementRequired) {
-        _sheathingPartialSqftController.clear();
-        sheathingPartialReplacementSqft = null;
-      }
-    });
-  },
- ),
-
-      if (!sheathingFullReplacementRequired)
-        TextFormField(
-          controller: _sheathingPartialSqftController,
-          decoration: const InputDecoration(
-            labelText: 'How many SF of sheathing require replacement?',
-          ),
-          keyboardType: TextInputType.number,
-          onSaved: (val) =>
-              sheathingPartialReplacementSqft = val,
-        ),
-
-      const SizedBox(height: 10),
-
-      buildDropdown(
-        'Sheathing type',
-        ['OSB', 'CDX'],
-        sheathingType,
-        (val) => setState(() => sheathingType = val),
-      ),
-      buildDropdown(
-        'Sheathing size',
-        ['1/2"', '5/8"'],
-        sheathingSize,
-        (val) => setState(() => sheathingSize = val),
-      ),
-    ],
-  ),
- const SizedBox(height: 20),
- ],
+ if (roofCoverType == 'Shingles')
+                ResidentialShinglesHubForm(
+                  setState: setState,
+                  fullRoofReplacementRequired: fullRoofReplacementRequired,
+                  onFullRoofReplacementRequiredChanged: (val) {
+                    fullRoofReplacementRequired = val;
+                  },
+                  partialReplacementSqftController: _partialReplacementSqftController,
+                  onPartialReplacementSqftSaved: (val) {
+                    partialReplacementSqft = val;
+                  },
+                  sheathingRequiredToBeChanged: sheathingRequiredToBeChanged,
+                  onSheathingRequiredToBeChangedChanged: (val) {
+                    sheathingRequiredToBeChanged = val;
+                  },
+                  sheathingFullReplacementRequired: sheathingFullReplacementRequired,
+                  onSheathingFullReplacementRequiredChanged: (val) {
+                    sheathingFullReplacementRequired = val;
+                  },
+                  sheathingPartialSqftController: _sheathingPartialSqftController,
+                  onSheathingPartialReplacementSqftSaved: (val) {
+                    sheathingPartialReplacementSqft = val;
+                  },
+                  sheathingType: sheathingType,
+                  onSheathingTypeChanged: (val) {
+                    sheathingType = val;
+                  },
+                  sheathingSize: sheathingSize,
+                  onSheathingSizeChanged: (val) {
+                    sheathingSize = val;
+                  },
+                  buildDropdown: buildDropdown,
+                ),
               // TextField for 'Other' Metal Subtype
               if (roofCoverType == 'Metal' && roofSubType == 'Other')
                 TextFormField(
@@ -1720,131 +1592,63 @@ _formKey.currentState!.save();
  ),
               
 
-           // Starter Row Questions (GLOBAL)
-CheckboxListTile(
-  title: const Text('Starter Row Installed?'),
-  value: starterRowInstalled,
-  onChanged: (val) => setState(() {
-    starterRowInstalled = val ?? false;
-    if (!starterRowInstalled) {
-      starterEaveInstalled = false;
-      starterEavePhoto = null;
-      starterRakeInstalled = false;
-      starterRakePhoto = null;
-    }
-  }),
-),
-
-if (starterRowInstalled)
-  Column(
-    children: [
-      CheckboxListTile(
-        title: const Text('Starter Row at Eave?'),
-        value: starterEaveInstalled,
-        onChanged: (val) => setState(() {
-          starterEaveInstalled = val ?? false;
-          if (!starterEaveInstalled) starterEavePhoto = null;
-        }),
-      ),
-      if (starterEaveInstalled)
-        Column(
-          children: [
-            ElevatedButton(
-              onPressed: () => _takePhoto(
-                'Starter Row Eave Photo',
-                isGlobal: true,
-              ),
-              child: const Text("Take Starter Row Eave Photo"),
-            ),
-            TextButton(
-              onPressed: () => _takeExtraPhotoForLabel(
-                'Starter row at Eave extra photo',
-              ),
-              child: const Text('Add extra Starter row at Eave photo'),
-            ),
-            if (starterEavePhoto != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Image.file(starterEavePhoto!, height: 100),
-              ),
-          ],
-        ),
-      CheckboxListTile(
-        title: const Text('Starter Row at Rake?'),
-        value: starterRakeInstalled,
-        onChanged: (val) => setState(() {
-          starterRakeInstalled = val ?? false;
-          if (!starterRakeInstalled) starterRakePhoto = null;
-        }),
-      ),
-      if (starterRakeInstalled)
-        Column(
-          children: [
-            ElevatedButton(
-              onPressed: () => _takePhoto(
-                'Starter Row Rake Photo',
-                isGlobal: true,
-              ),
-              child: const Text("Take Starter Row Rake Photo"),
-            ),
-            TextButton(
-              onPressed: () => _takeExtraPhotoForLabel(
-                'Starter row at Rake extra photo',
-              ),
-              child: const Text('Add extra Starter row at Rake photo'),
-            ),
-            if (starterRakePhoto != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Image.file(starterRakePhoto!, height: 100),
-              ),
-          ],
-        ),
-    ],
-  ),
-                               
-              // Drip Edge Installed? (Simplified)
-              if (['Shingles'].contains(roofCoverType))
-              CheckboxListTile(
-                title: const Text('Drip Edge Installed?'),
-                value: hasDripEdge,
-                onChanged: (val) => setState(() {
-                  hasDripEdge = val!;
-                  if (!hasDripEdge) {
-                    dripEdgeType = null;
-                    dripEdgePhoto = null; 
-                    widget.report.dripEdgeType = null;
-                    widget.report.dripEdgePhoto = null;
+           ResidentialRoofAccessoriesHub(
+                setState: setState,
+                roofCoverType: roofCoverType,
+                isCommercial: widget.isCommercial,
+                starterRowInstalled: starterRowInstalled,
+                onStarterRowInstalledChanged: (val) {
+                  starterRowInstalled = val;
+                  if (!starterRowInstalled) {
+                    starterEaveInstalled = false;
+                    starterEavePhoto = null;
+                    starterRakeInstalled = false;
+                    starterRakePhoto = null;
                   }
-                }),
-              ),
-              if (hasDripEdge) // Only show drip edge details if generally installed
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildDropdown('Drip Edge Type', ['Standard', 'Gutter Apron', 'Copper'],
-                        dripEdgeType, (val) {
-                        setState(() {
-                        dripEdgeType = val;
-                         widget.report.dripEdgeType = val;
-                         });
-                        }),
-                    ElevatedButton(
-                      onPressed: () => _takePhoto('Drip Edge Photo', isGlobal: true), // Single photo button
-                      child: const Text("Take Drip Edge Photo"),
-                    ), 
-                            TextButton(
-                      onPressed: () => _takeExtraPhotoForLabel('Drip Edge extra photo'),
-                      child: const Text('Add extra Drip Edge photo'),
-                     ),
-
-                    if (dripEdgePhoto != null) // Display single drip edge photo
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Image.file(dripEdgePhoto!, height: 100),
-                      ),
-                  ],
+                },
+                starterEaveInstalled: starterEaveInstalled,
+                onStarterEaveInstalledChanged: (val) {
+                  starterEaveInstalled = val;
+                  if (!starterEaveInstalled) starterEavePhoto = null;
+                },
+                starterEavePhoto: starterEavePhoto,
+                starterRakeInstalled: starterRakeInstalled,
+                onStarterRakeInstalledChanged: (val) {
+                  starterRakeInstalled = val;
+                  if (!starterRakeInstalled) starterRakePhoto = null;
+                },
+                starterRakePhoto: starterRakePhoto,
+                hasDripEdge: hasDripEdge,
+                onHasDripEdgeChanged: (val) {
+                  hasDripEdge = val;
+                },
+                dripEdgeType: dripEdgeType,
+                onDripEdgeTypeChanged: (val) {
+                  dripEdgeType = val;
+                  widget.report.dripEdgeType = val;
+                },
+                dripEdgePhoto: dripEdgePhoto,
+                onClearDripEdge: () {
+                  dripEdgeType = null;
+                  dripEdgePhoto = null;
+                  widget.report.dripEdgeType = null;
+                  widget.report.dripEdgePhoto = null;
+                },
+                iceAndWaterBarrierInstalled: iceAndWaterBarrierInstalled,
+                onIceAndWaterBarrierInstalledChanged: (val) {
+                  iceAndWaterBarrierInstalled = val;
+                  if (!iceAndWaterBarrierInstalled) {
+                    iceAndWaterBarrierPhoto = null;
+                  }
+                },
+                iceAndWaterBarrierPhoto: iceAndWaterBarrierPhoto,
+                takePhoto: (label, {isGlobal = false}) => _takePhoto(
+                  label,
+                  isGlobal: isGlobal,
                 ),
+                takeExtraPhotoForLabel: _takeExtraPhotoForLabel,
+                buildDropdown: buildDropdown,
+              ),
 
               // Gravel ballast present checkbox (only for specific roof types)
               if (['Modified Bitumen', 'EPDM', 'Roll Roofing'].contains(roofCoverType))
@@ -1859,42 +1663,10 @@ if (starterRowInstalled)
                   },
                 ),
 
-                 if (['Shingles'].contains(roofCoverType))
-  CheckboxListTile(
-    title: const Text('Ice & Water Barrier Installed?'),
-    value: iceAndWaterBarrierInstalled,
-    onChanged: (val) => setState(() {
-      iceAndWaterBarrierInstalled = val ?? false;
-      if (!iceAndWaterBarrierInstalled) {
-        iceAndWaterBarrierPhoto = null;
-      }
-    }),
-  ),
-
-if (iceAndWaterBarrierInstalled)
-  Column(
-    children: [
-      ElevatedButton(
-        onPressed: () => _takePhoto('Ice & Water Barrier Photo', isGlobal: true),
-        child: const Text("Take Ice & Water Barrier Photo"),
-      ),
-      TextButton(
-        onPressed: () => _takeExtraPhotoForLabel('Ice & Water Barrier extra photo'),
-        child: const Text('Add extra Ice & Water Barrier photo'),
-      ),
-      if (iceAndWaterBarrierPhoto != null)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Image.file(iceAndWaterBarrierPhoto!, height: 100),
-        ),
-    ],
-  ),
-
               const SizedBox(height: 20),
 
               // --- Facet Inspection Section ---
               if (roofCoverType == 'Shingles' ||
-                  roofCoverType == 'Metal' ||
                   roofCoverType == 'Tile roofing' ||
                   roofCoverType == 'Wood Shake' ||
                   roofCoverType == 'Slate Roof' ||
@@ -1902,687 +1674,164 @@ if (iceAndWaterBarrierInstalled)
                   roofCoverType == 'Modified Bitumen' ||
                   roofCoverType == 'EPDM' ||
                   roofCoverType == 'Roll Roofing')
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Facet Inspection',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,)),
-                    const Divider(),
-
-                    // Facet Navigation (if more than one facet)
-                    if (_facets.length > 1)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton(
-                            onPressed: _currentFacetIndex > 0
-                                ? () {
-                                    _saveCurrentFacetData();
-                                    setState(() {
-                                      _currentFacetIndex--;
-                                      _initializeCurrentFacet();
-                                    });
-                                  }
-                                : null,
-                            child: const Text('Previous Facet'),
-                          ),
-                          Text(
-                              'Facet ${_currentFacetIndex + 1} of ${_facets.length}'),
-                          ElevatedButton(
-                            onPressed: _currentFacetIndex < _facets.length - 1
-                                ? () {
-                                    _saveCurrentFacetData();
-                                    setState(() {
-                                      _currentFacetIndex++;
-                                      _initializeCurrentFacet();
-                                    });
-                                  }
-                                : null,
-                            child: const Text('Next Facet'),
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 10),
-
-                    Text('Current Facet: ${_currentFacetNameController.text}',
-    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-
-buildDropdown(
-  'Facet Orientation',
-  FacetOrientation.values
-      .map((e) => e.name)
-      .where((name) => name != 'none')
-      .toList(),
-  _currentFacetOrientation == FacetOrientation.none
-      ? null
-      : _currentFacetOrientation.name,
-  (val) {
-    setState(() {
-      _currentFacetOrientation = FacetOrientation.values
-          .firstWhere((e) => e.name == val);
-      // Auto-fill facet name based on orientation
-      if (val != null) {
-        _currentFacetNameController.text =
-            _generateNextFacetName(_currentFacetOrientation);
-      }
-    });
-  },
-  requiredField: true,
-),
-
-                  TextFormField(
-                   controller: _currentFacetNameController,
-                    decoration: const InputDecoration(labelText: 'Facet Name'),
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                    onSaved: (val) => _facets[_currentFacetIndex]['facetName'] = val,
-                  ),
-                    TextFormField(
-                      controller: _currentPitchFacetController,
-                      decoration: const InputDecoration(labelText: 'Pitch of Facet'),
-                                            onSaved: (val) =>
-                          _facets[_currentFacetIndex]['pitchFacetValue'] = val,
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _takePhoto('Overview Photo',
-                          isFacetPhoto: true, facetIndex: _currentFacetIndex),
-                      child: const Text("Take Facet Overview Photo"),
-                    ),
-                    if (_currentFacetOverviewPhoto != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Image.file(_currentFacetOverviewPhoto!, height: 100),
-                      ),
-
-                      // Ridge Vent Installed? (PER FACET)
-                       if (['Shingles'].contains(roofCoverType))
-                       CheckboxListTile(
-                       title: const Text('Is there Ridge Vent?'),
-                       value: _currentHasRidgeVent,
-                       onChanged: (val) => setState(() {
-                       _currentHasRidgeVent = val ?? false;
-                        if (!_currentHasRidgeVent) {
-                        _currentRidgeVentType = null;
-                        _currentRidgeVentPhoto = null;
+                ResidentialFacetInspectionHub(
+                  setState: setState,
+                  roofCoverType: roofCoverType,
+                  facets: _facets,
+                  currentFacetIndex: _currentFacetIndex,
+                  onPreviousFacet: () {
+                    _saveCurrentFacetData();
+                    setState(() {
+                      _currentFacetIndex--;
+                      _initializeCurrentFacet();
+                    });
+                  },
+                  onNextFacet: () {
+                    _saveCurrentFacetData();
+                    setState(() {
+                      _currentFacetIndex++;
+                      _initializeCurrentFacet();
+                    });
+                  },
+                  currentFacetNameController: _currentFacetNameController,
+                  currentFacetOrientationName: _currentFacetOrientation == FacetOrientation.none
+                      ? null
+                      : _currentFacetOrientation.name,
+                  facetOrientationOptions: FacetOrientation.values
+                      .map((e) => e.name)
+                      .where((name) => name != 'none')
+                      .toList(),
+                  onFacetOrientationChanged: (val) {
+                    setState(() {
+                      _currentFacetOrientation = FacetOrientation.values
+                          .firstWhere((e) => e.name == val);
+                      if (val != null) {
+                        _currentFacetNameController.text =
+                            _generateNextFacetName(_currentFacetOrientation);
+                      }
+                    });
+                  },
+                  currentPitchFacetController: _currentPitchFacetController,
+                  currentFacetOverviewPhoto: _currentFacetOverviewPhoto,
+                  currentHasRidgeVent: _currentHasRidgeVent,
+                  onCurrentHasRidgeVentChanged: (val) {
+                    _currentHasRidgeVent = val;
+                    if (!_currentHasRidgeVent) {
+                      _currentRidgeVentType = null;
+                      _currentRidgeVentPhoto = null;
                       _facets[_currentFacetIndex]['ridgeVentType'] = null;
                       _facets[_currentFacetIndex]['ridgeVentPhoto'] = null;
-                      }
-                      _facets[_currentFacetIndex]['hasRidgeVent'] = _currentHasRidgeVent;
-                     }),
-                    ),
-
-                       if (_currentHasRidgeVent)
-                       Column(
-                       children: [
-                       buildDropdown(
-                      'Ridge Vent Type',
-                       ridgeVentTypes,
-                       _currentRidgeVentType,
-                       (val) => setState(() {
-                      _currentRidgeVentType = val;
-                      _facets[_currentFacetIndex]['ridgeVentType'] = val;
-                        }),
-                     ),
-                       ElevatedButton(
-                      onPressed: () => _takePhoto(
-                      'Ridge Vent Photo',
-                       isFacetPhoto: true,
-                       facetIndex: _currentFacetIndex,
-                      ),
-                      child: const Text("Take Ridge Vent Photo"),
-                      ),
-                       TextButton(
-                      onPressed: () => _takeExtraPhotoForLabel('Ridge Vent extra photo'),
-                      child: const Text('Add extra Ridge Vent photo'),
-                    ),
-                      if (_currentRidgeVentPhoto != null)
-                      Padding(
-                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                       child: Image.file(_currentRidgeVentPhoto!, height: 100),
-        ),
-    ],
-  ),
-                                   
-                    CheckboxListTile(
-                      title: const Text('ATR Performed?'),
-                      value: _currentAtrPerformed,
-                      onChanged: (val) => setState(() {
-                        _currentAtrPerformed = val!;
-                        if (!val) {
-                          _currentAtrResult = null;
-                          _currentAtrPhoto = null;
-                        }
-                      }),
-                    ),
-                    if (_currentAtrPerformed)
-                      Column(
-                        children: [
-                          buildDropdown('ATR Result', atrResults, _currentAtrResult,
-                              (val) => setState(() => _currentAtrResult = val)),
-                          ElevatedButton(
-                            onPressed: () => _takePhoto('ATR Photo',
-                                isFacetPhoto: true, facetIndex: _currentFacetIndex),
-                            child: const Text("Take ATR Photo"),
-                          ),
-                           TextButton(onPressed: () => _takeExtraPhotoForLabel('ATR extra photo'),
-                                child: const Text('Add extra ATR photo'),),
-                          if (_currentAtrPhoto != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Image.file(_currentAtrPhoto!, height: 100),
-                            ),
-                        ],
-                      ),
-                    CheckboxListTile(
-                      title: const Text('Has Valley Metal?'),
-                      value: _currentHasValleyMetal,
-                      onChanged: (val) => setState(() {
-                        _currentHasValleyMetal = val!;
-                        if (!val) {
-                          _currentValleyMetalType = null;
-                          _currentValleyMetalPhoto = null;
-                        }
-                      }),
-                    ),
-                    if (_currentHasValleyMetal)
-                      Column(
-                        children: [
-                          buildDropdown('Valley Metal Type', valleyMetalTypes,
-                              _currentValleyMetalType, (val) => setState(() => _currentValleyMetalType = val)),
-                          ElevatedButton(
-                            onPressed: () => _takePhoto('Valley Metal Photo',
-                                isFacetPhoto: true, facetIndex: _currentFacetIndex),
-                            child: const Text("Take Valley Metal Photo"),
-                          ),
-                           TextButton(onPressed: () => _takeExtraPhotoForLabel('Valley Metal extra photo'),
-                                child: const Text('Add extra Valley Metal photo'),),
-                          if (_currentValleyMetalPhoto != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Image.file(_currentValleyMetalPhoto!, height: 100),
-                            ),
-                        ],
-                      ),
-
-                        
-                        const SizedBox(height: 20),
- const Text(
-  'Flashings on Facet',
-  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
- ),
- const Divider(),
-
- // Lista de flashings
- ..._currentFacetFlashingsData.asMap().entries.map((entry) {
-  final idx = entry.key;
-  final data = entry.value;
-
-  return Card(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Flashing ${idx + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  setState(() {
+                    }
+                    _facets[_currentFacetIndex]['hasRidgeVent'] = _currentHasRidgeVent;
+                  },
+                  ridgeVentTypes: ridgeVentTypes,
+                  currentRidgeVentType: _currentRidgeVentType,
+                  onCurrentRidgeVentTypeChanged: (val) {
+                    _currentRidgeVentType = val;
+                    _facets[_currentFacetIndex]['ridgeVentType'] = val;
+                  },
+                  currentRidgeVentPhoto: _currentRidgeVentPhoto,
+                  currentAtrPerformed: _currentAtrPerformed,
+                  onCurrentAtrPerformedChanged: (val) {
+                    _currentAtrPerformed = val;
+                    if (!val) {
+                      _currentAtrResult = null;
+                      _currentAtrPhoto = null;
+                    }
+                  },
+                  atrResults: atrResults,
+                  currentAtrResult: _currentAtrResult,
+                  onCurrentAtrResultChanged: (val) {
+                    _currentAtrResult = val;
+                  },
+                  currentAtrPhoto: _currentAtrPhoto,
+                  currentHasValleyMetal: _currentHasValleyMetal,
+                  onCurrentHasValleyMetalChanged: (val) {
+                    _currentHasValleyMetal = val;
+                    if (!val) {
+                      _currentValleyMetalType = null;
+                      _currentValleyMetalPhoto = null;
+                    }
+                  },
+                  valleyMetalTypes: valleyMetalTypes,
+                  currentValleyMetalType: _currentValleyMetalType,
+                  onCurrentValleyMetalTypeChanged: (val) {
+                    _currentValleyMetalType = val;
+                  },
+                  currentValleyMetalPhoto: _currentValleyMetalPhoto,
+                  currentFacetFlashingsData: _currentFacetFlashingsData,
+                  currentFlashingOtherControllers: _currentFlashingOtherControllers,
+                  onRemoveFlashing: (idx) {
+                    final data = _currentFacetFlashingsData[idx];
                     data['otherController'].dispose();
                     _currentFlashingOtherControllers.removeAt(idx);
                     _currentFacetFlashingsData.removeAt(idx);
-                  });
-                },
-              ),
-            ],
-          ),
-          buildDropdown(
-            'Flashing Type',
-            [
-              'Step flashing',
-              'Flashing kick-out divert',
-              'Ridge flashing',
-              'Counter/Apron flashing',
-              'Wide flashing',
-              'Sidewall/Endwall flashing',
-              'L flashing',
-              'Chimney flashing',
-              'Roof window step flashing kit',
-              'Skylight flashing kit (dome)',
-              'Other',
-            ],
-               data['type'],
-  (val) {
-    setState(() {
-      data['type'] = val;
-      // Limpiar campos dependientes
-      data['material'] = null;
-      data['size'] = null;
-      data['finish'] = null;
-      data['grade'] = null;
-      data['otherSpecify'] = '';
-      // Si quieres, también limpiar el controller de "Other"
-      if (data['otherController'] is TextEditingController) {
-        (data['otherController'] as TextEditingController).clear();
-      }
-    });
-  },
-          ),
-          if (data['type'] == 'Other')
-            TextFormField(
-              controller: data['otherController'],
-              decoration: const InputDecoration(labelText: 'Specify Other Flashing'),
-              onSaved: (val) => data['otherSpecify'] = val,
-            ),
-            _buildFlashingSubfields(data),
-          CheckboxListTile(
-            title: const Text('Should be changed?'),
-            value: data['shouldBeChanged'],
-            onChanged: (val) =>
-                setState(() => data['shouldBeChanged'] = val ?? false),
-          ),
-          ElevatedButton(
-            onPressed: () => _takePhoto(
-              'Flashing Photo ${idx + 1}',
-           flashingIndex: idx,
-            ),
-            child: const Text("Take Flashing Photo"),
-                      ),
-           TextButton(onPressed: () => _takeExtraPhotoForLabel('Flashing extra photo'),
-                                child: const Text('Add extra Flashing photo'),),
-                                          if (data['photo'] != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Image.file(data['photo']!, height: 100),
-            ),
-        ],
-      ),
-    ),
-  );
-  }),
-                    ElevatedButton(
-  onPressed: () {
-    setState(() {
-      final f = _createNewFlashingData();
-      _currentFacetFlashingsData.add(f);
-      _currentFlashingOtherControllers.add(f['otherController']);
-    });
-  },
-  child: const Text('Add Flashing'),
- ),
-
- const SizedBox(height: 20),
-
-                     // Luego viene 'Vents on Facet'
-                    const SizedBox(height: 20),
-                    const Text('Vents on Facet',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,)),
-                    const Divider(),
-
-                    // Dynamically added vent sections
-                    ..._currentFacetVentsData.asMap().entries.map((entry) {
-                      int ventIndex = entry.key;
-                      Map<String, dynamic> ventData = entry.value;
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Vent ${ventIndex + 1}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      setState(() {
-                                        // Dispose controllers before removing
-                                        ventData['countController'].dispose();
-                                        ventData['otherSpecifyController'].dispose();
-                                        _currentVentCountControllers.removeAt(ventIndex);
-                                        _currentOtherVentSpecifyControllers.removeAt(ventIndex);
-                                        _currentFacetVentsData.removeAt(ventIndex);
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                              buildDropdown(
-                                'Vent Type',
-                                ventTypes,
-                                ventData['type'],
-                                (val) => setState(() => ventData['type'] = val),
-                              ),
-                              CheckboxListTile(
-                                title: const Text('Should be Changed?'),
-                                value: ventData['shouldBeChanged'],
-                                onChanged: (val) =>
-                                    setState(() => ventData['shouldBeChanged'] = val!),
-                              ),
-                              if (ventData['type'] != 'Other') // FIX: Removed unnecessary null comparison
-                                TextFormField(
-                                  controller: ventData['countController'],
-                                  decoration:
-                                      InputDecoration(labelText: 'Count of ${ventData['type']}'),
-                                  keyboardType: TextInputType.number,
-                                  onSaved: (val) => ventData['count'] = val,
-                                ),
-                              if (ventData['type'] == 'Pipe jack')
-                                Column(
-                                  children: [
-                                    CheckboxListTile(
-                                      title: const Text('Include Split Boot?'),
-                                      value: ventData['includeSplitBoot'],
-                                      onChanged: (val) =>
-                                          setState(() => ventData['includeSplitBoot'] = val!),
-                                    ),
-                                    CheckboxListTile(
-                                      title: const Text('Include Lead?'),
-                                      value: ventData['includeLead'],
-                                      onChanged: (val) =>
-                                          setState(() => ventData['includeLead'] = val!),
-                                    ),
-                                  ],
-                                ),
-                              if (ventData['type'] == 'Other')
-                                TextFormField(
-                                  controller: ventData['otherSpecifyController'],
-                                  decoration:
-                                      const InputDecoration(labelText: 'Specify Other Vent'),
-                                  validator: (v) => v!.isEmpty ? 'Required' : null,
-                                  onSaved: (val) => ventData['otherSpecify'] = val,
-                                ),
-                              ElevatedButton(
-                                onPressed: () => _takePhoto('Vent Photo ${ventIndex + 1}',
-                                    ventIndex: ventIndex),
-                                child: const Text("Take Vent Photo"),
-                              ),
-                               TextButton(onPressed: () => _takeExtraPhotoForLabel('Vent extra photo'),
-                                child: const Text('Add extra Vent photo'),),
-                              if (ventData['photo'] != null)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Image.file(ventData['photo']!, height: 100),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),//toList(),
-                               
-                    ElevatedButton(
-                      onPressed: _addAnotherVentToCurrentFacet,
-                      child: const Text('Add Vent'),
-                    ),
-
-                                const SizedBox(height: 20),
- const Text(
-  'Other elements on the roof',
-  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
- ),
- const Divider(),
-
- // Lista de Other elements
- ..._currentFacetOtherElementsData.asMap().entries.map((entry) {
-  final idx = entry.key;
-  final data = entry.value;
-
-  return Card(
-    margin: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Element ${idx + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  setState(() {
+                  },
+                  onAddFlashing: () {
+                    final f = _createNewFlashingData();
+                    _currentFacetFlashingsData.add(f);
+                    _currentFlashingOtherControllers.add(f['otherController']);
+                  },
+                  flashingTypes: flashingTypesForRoofType(roofCoverType),
+                  buildFlashingSubfields: _buildFlashingSubfields,
+                  currentFacetVentsData: _currentFacetVentsData,
+                  currentVentCountControllers: _currentVentCountControllers,
+                  currentOtherVentSpecifyControllers: _currentOtherVentSpecifyControllers,
+                  onRemoveVent: (ventIndex) {
+                    final ventData = _currentFacetVentsData[ventIndex];
+                    ventData['countController'].dispose();
+                    ventData['otherSpecifyController'].dispose();
+                    _currentVentCountControllers.removeAt(ventIndex);
+                    _currentOtherVentSpecifyControllers.removeAt(ventIndex);
+                    _currentFacetVentsData.removeAt(ventIndex);
+                  },
+                  onAddVent: _addAnotherVentToCurrentFacet,
+                  ventTypes: ventTypesForRoofType(roofCoverType),
+                  currentFacetOtherElementsData: _currentFacetOtherElementsData,
+                  currentOtherElementCountControllers: _currentOtherElementCountControllers,
+                  currentOtherElementSpecifyControllers: _currentOtherElementSpecifyControllers,
+                  onRemoveOtherElement: (idx) {
+                    final data = _currentFacetOtherElementsData[idx];
                     data['countController'].dispose();
                     data['otherSpecifyController'].dispose();
                     _currentOtherElementCountControllers.removeAt(idx);
                     _currentOtherElementSpecifyControllers.removeAt(idx);
                     _currentFacetOtherElementsData.removeAt(idx);
-                  });
-                },
-              ),
-            ],
-          ),
-          buildDropdown(
-            'Element Type',
-            [
-              'Snow guard/stop',
-              'Snow bar - powder coated',
-              'Snow panel - aluminum',
-              'Snow panel rake cap - aluminum',
-              'Skylight',
-              'Evaporative cooler',
-              'Air condenser w/pad',
-              'Solar electric panel',
-              'Water heater panel',
-              'Satellite dishes',
-              'AC Units',
-              'Meter mast for overhead power – conduit',
-              'Other',
-            ],
-            data['type'],
-            (val) => setState(() => data['type'] = val),
-          ),
-          TextFormField(
-            controller: data['countController'],
-            decoration: const InputDecoration(
-              labelText: 'Count',
-            ),
-            keyboardType: TextInputType.number,
-            onSaved: (val) => data['count'] = val,
-          ),
-          if (data['type'] == 'Other')
-            TextFormField(
-              controller: data['otherSpecifyController'],
-              decoration:
-                  const InputDecoration(labelText: 'Specify Other element'),
-              onSaved: (val) => data['otherSpecify'] = val,
-            ),
-
-          // Exclusivo: Should be changed vs Detach & Reset only
-          CheckboxListTile(
-            title: const Text('Should be changed?'),
-            value: data['shouldBeChanged'],
-            onChanged: (val) {
-              setState(() {
-                data['shouldBeChanged'] = val ?? false;
-                if (data['shouldBeChanged'] == true) {
-                  data['detachAndResetOnly'] = false;
-                }
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Detach & Reset only'),
-            value: data['detachAndResetOnly'],
-            onChanged: (val) {
-              setState(() {
-                data['detachAndResetOnly'] = val ?? false;
-                if (data['detachAndResetOnly'] == true) {
-                  data['shouldBeChanged'] = false;
-                }
-              });
-            },
-          ),
-
-          ElevatedButton(
-            onPressed: () => _takePhoto(
-              'Other element photo ${idx + 1}',
-              // podrías añadir otro índice específico si quisieras
-            ),
-            child: const Text("Take element photo"),
-          ),
-          TextButton(
-             onPressed: () => _takeExtraPhotoForLabel(
-              'Other element ${idx + 1} (${data['type'] ?? 'Unknown'}) extra photo',
-                   ),
-               child: const Text('Add extra element photo'),
-               ),
-          if (data['photo'] != null)
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8.0),
-              child: Image.file(data['photo'] as File, height: 100),
-            ),
-        ],
-      ),
-    ),
-  );
- }),
-
- ElevatedButton(
-  onPressed: () {
-    setState(() {
-      final e = _createNewOtherElementData();
-      _currentFacetOtherElementsData.add(e);
-      _currentOtherElementCountControllers.add(e['countController']);
-      _currentOtherElementSpecifyControllers
-          .add(e['otherSpecifyController']);
-    });
-  },
-  child: const Text('Add Other element'),
- ),
-
-                    const SizedBox(height: 20),
-                          const Divider(),
-                           ElevatedButton.icon(
-                            onPressed: () {
-                       final facetName = _currentFacetNameController.text.isNotEmpty
-                       ? _currentFacetNameController.text
-                                                     : 'Unnamed facet';
-                          _takeExtraPhotoForLabel('Facet $facetName - additional photo');
-                            },
-                                                        icon: const Icon(Icons.add_a_photo),
-                         label: const Text('Take additional photo of this facet'),
-                             ),
-                                       const SizedBox(height: 20),
-                               // Campo de texto para comentarios de la faceta actual
-                                      const SizedBox(height: 20),
-                                       const Text(
-                                      'Additional comment on this facet',
-                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black,),
-                                     ),
-                                      const Divider(),
-                                    TextFormField(
-                                     controller: _currentFacetCommentController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Comment',
-                                        alignLabelWithHint: true,
-                                         ),
-                                         maxLines: 3,
-                                        ),
-                                        const SizedBox(height: 20),
-
-                                                         // Checkbox para indicar que es la última faceta (ya existente)
-                    CheckboxListTile(
-                      title: const Text('This is the Last Facet'),
-                      value: _isLastFacet,
-                      onChanged: (val) {
-                        setState(() {
-                          _isLastFacet = val!;
-                        });
-                      },
-                    ),
-                                    
-                    // NUEVO: Botón "Add more Images to the report?" condicional
-                    if (_isLastFacet) ...[
-                      const SizedBox(height: 20),
-                      const Text('Photo Report - Additional Images',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const Divider(),
-                      ElevatedButton.icon(
-                        onPressed: _pickImagesFromGallery, // Llama al nuevo método para galería
-                        icon: const Icon(Icons.add_photo_alternate),
-                        label: const Text("Add Images from your gallery?"),
-                      ),
-                      const SizedBox(height: 10),
-                      // Mostrar miniaturas de las imágenes seleccionadas de la galería
-                      if (photoReportImages.isNotEmpty)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Images added to the report::', style: TextStyle(fontWeight: FontWeight.bold)),
-                            Wrap(
-                              spacing: 8.0, // Espacio entre imágenes
-                              runSpacing: 4.0, // Espacio entre líneas de imágenes
-                              children: photoReportImages.where((imageFile) {
-                                // Filtra las imágenes que no son de la galería si quieres mostrar solo las "User Images" aquí
-                                // Por simplicidad, aquí está mostrando todas las fotos que están en photoReportImages
-                                return true; 
-                              }).map((imageFile) {
-                                return Stack(
-                                  children: [
-                                    Image.file(imageFile, height: 80, width: 80, fit: BoxFit.cover),
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            photoReportImages.remove(imageFile);
-                                            // También remover del inspectionData si es necesario para tu lógica
-                                            inspectionData.removeWhere((element) => element['path'] == imageFile.path && element['label'] == 'User Image');
-                                          });
-                                        },
-                                        child: const CircleAvatar(
-                                          radius: 10,
-                                          backgroundColor: Colors.red,
-                                          child: Icon(Icons.close, color: Colors.white, size: 12),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
-                    ],
-
-                    // Next Facet / Submit Buttons
- Row(
-  mainAxisAlignment: MainAxisAlignment.spaceAround,
-  children: [
-    // Botón "Add Next Facet" solo visible si no es la última faceta
-    if (!_isLastFacet)
-      ElevatedButton(
-        onPressed: _addNextFacet,
-        child: const Text('Add Next Facet'),
-      ),
-
-      if(_isLastFacet)
-   ElevatedButton(
-  onPressed: submitForm,
-  child: const Text(
-    'Submit Estimate',
-    style: TextStyle(fontSize: 18),
-  ),
- ),
-  ],
-  ),
-
- const SizedBox(height: 40),
-                  ],// final children of Column
-                ),// final single child scroll view
+                  },
+                  onAddOtherElement: () {
+                    final e = _createNewOtherElementData();
+                    _currentFacetOtherElementsData.add(e);
+                    _currentOtherElementCountControllers.add(e['countController']);
+                    _currentOtherElementSpecifyControllers.add(e['otherSpecifyController']);
+                  },
+                  onTakeAdditionalFacetPhoto: () {
+                    final facetName = _currentFacetNameController.text.isNotEmpty
+                        ? _currentFacetNameController.text
+                        : 'Unnamed facet';
+                    _takeExtraPhotoForLabel('Facet $facetName - additional photo');
+                  },
+                  currentFacetCommentController: _currentFacetCommentController,
+                  isLastFacet: _isLastFacet,
+                  onIsLastFacetChanged: (val) {
+                    _isLastFacet = val;
+                  },
+                  pickImagesFromGallery: _pickImagesFromGallery,
+                  photoReportImages: photoReportImages,
+                  inspectionData: inspectionData,
+                  onRemoveGalleryImage: (imageFile) {
+                    photoReportImages.remove(imageFile);
+                    inspectionData.removeWhere(
+                      (element) =>
+                          element['path'] == imageFile.path &&
+                          element['label'] == 'User Image',
+                    );
+                  },
+                  addNextFacet: _addNextFacet,
+                  submitForm: submitForm,
+                  takePhoto: _takePhoto,
+                  takeExtraPhotoForLabel: _takeExtraPhotoForLabel,
+                  buildDropdown: buildDropdown,
+                ),
               ], // final children of Column
           ),// final Scaffold body
         ),// final Scaffold
@@ -2648,7 +1897,3 @@ return DropdownButtonFormField<String>(
   }
 
 }
-
-
-
-
