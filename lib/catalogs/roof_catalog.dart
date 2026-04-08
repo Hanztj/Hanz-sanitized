@@ -1,4 +1,4 @@
-const List<String> roofTypesAll = [
+const List<String> roofTypesCommercial = [
   'Shingles',
   'Metal',
   'Tile roofing',
@@ -7,6 +7,21 @@ const List<String> roofTypesAll = [
   'TPO',
   'Modified Bitumen',
   'EPDM',
+  'Roll Roofing',
+  'Other',
+];
+
+// Backwards-compat alias for older screens that used roofTypesAll.
+const List<String> roofTypesAll = roofTypesCommercial;
+
+// Residential flow excludes TPO/EPDM; Roll Roofing and Modified Bitumen can still appear.
+const List<String> roofTypesResidential = [
+  'Shingles',
+  'Metal',
+  'Tile roofing',
+  'Wood Shake',
+  'Slate Roof',
+  'Modified Bitumen',
   'Roll Roofing',
   'Other',
 ];
@@ -52,4 +67,8 @@ const Map<String, List<String>> roofSubtypesByType = {
 List<String> subtypesForRoofType(String? roofType) {
   if (roofType == null) return const [];
   return roofSubtypesByType[roofType] ?? const [];
+}
+
+List<String> roofTypesForFlow({required bool isCommercial}) {
+  return isCommercial ? roofTypesCommercial : roofTypesResidential;
 }
