@@ -148,6 +148,8 @@ class CommercialRoofSectionData {
 
   bool? insulationKnown;
 
+  bool gravelBallastPresent = false;
+
   // Deck replacement (flat systems)
   bool deckChangeRequired = false;
   bool deckFullReplacementRequired = false;
