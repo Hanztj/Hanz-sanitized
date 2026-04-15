@@ -177,6 +177,14 @@ class CommercialRoofSectionData {
   List<HvacUnitData> hvacUnits = [];
 
   String? notes;
+
+  // ✅ NUEVO
+  List<CommercialFlashingData> tpoFlashings = [];
+  
+  // Para futuros tipos (metal, epdm, etc.)
+  // List<CommercialFlashingData> metalFlashings = [];
+
+
 }
 
 class AccessoryItemData {
@@ -299,5 +307,28 @@ class OtherElementData {
     this.shouldBeChanged = false,
     this.detachAndResetOnly = false,
     this.otherSpecify,
+  });
+}
+// ==================== COMMERCIAL FLASHINGS ====================
+
+class CommercialFlashingData {
+  String type;                    // Ej: "Flash Parapet wall"
+  String? size;
+  String? material;
+  String? grade;
+  String? lfCount;                // Solo para Curb Flashing
+  String? otherSpecify;
+
+  File? photo;                    // Primera foto (obligatoria)
+  List<File> extraPhotos = [];
+
+  CommercialFlashingData({
+    required this.type,
+    this.size,
+    this.material,
+    this.grade,
+    this.lfCount,
+    this.otherSpecify,
+    this.photo,
   });
 }
