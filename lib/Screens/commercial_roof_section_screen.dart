@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
 import '../catalogs/roof_catalog.dart';
 import '../inspection_report_model.dart';
 import '../utils/photo_labels.dart';
@@ -10,6 +9,7 @@ import 'commercial/hubs/commercial_flat_hub.dart';
 import 'commercial/hubs/commercial_metal_hub.dart';
 import 'commercial/hubs/commercial_shingles_hub.dart';
 import 'commercial_building_details_screen.dart';
+import 'commercial/components/commercial_tpo_flashings.dart';
 
 class CommercialRoofSectionScreen extends StatefulWidget {
   final String plan;
@@ -405,6 +405,13 @@ class _CommercialRoofSectionScreenState extends State<CommercialRoofSectionScree
               setState: setState,
               sync: _sync,
               takeCommercialPhoto: _takeCommercialPhoto,
+            ),
+            CommercialTpoFlashings(
+              flashings: roof.tpoFlashings,
+              onChanged: _sync,
+              takePhoto: _takeCommercialPhoto,
+              buildingName: buildingName,
+              roofName: roofName,
             ),
           const SizedBox(height: 12),
           SizedBox(
