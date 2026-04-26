@@ -22,6 +22,8 @@ import 'package:claimscope_clean/catalogs/roof_components_catalog.dart';
 import 'package:claimscope_clean/screens/residential/hubs/residential_shingles_hub.dart';
 import 'package:claimscope_clean/screens/residential/hubs/residential_roof_accessories_hub.dart';
 import 'package:claimscope_clean/screens/residential/hubs/residential_facet_inspection_hub.dart';
+import 'package:claimscope_clean/catalogs/flashing_catalog.dart';
+
 
 
 enum FacetOrientation {
@@ -195,120 +197,27 @@ class _RoofInspectionFormState extends State<RoofInspectionForm> {
   );
  }
                  
-              Widget _buildFlashingSubfields(Map<String, dynamic> data) {
+Widget _buildFlashingSubfields(Map<String, dynamic> data) {
   final String? type = data['type'];
 
   if (type == null) return const SizedBox.shrink();
 
-  // Step flashing, Ridge flashing -> Metal/Copper
-  if (type == 'Step flashing' || type == 'Ridge flashing') {
-    return buildDropdown(
-      'Material',
-      ['Metal', 'Copper'],
-      data['material'],
-      (val) => setState(() => data['material'] = val),
-    );
-  }
+  final fields = flashingFieldsForResidentialType(type);
+  if (fields.isEmpty) return const SizedBox.shrink();
 
-  // Counter/Apron flashing -> Standard/Copper
-  if (type == 'Counter/Apron flashing') {
-    return buildDropdown(
-      'Material',
-      ['Standard', 'Copper'],
-      data['material'],
-      (val) => setState(() => data['material'] = val),
-    );
-  }
-
-  // Wide flashing -> 14"/20" + Copper? (lo mapeamos como size y material)
-  if (type == 'Wide flashing') {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildDropdown(
-          'Size',
-          ['14"', '20"'],
-          data['size'],
-          (val) => setState(() => data['size'] = val),
-        ),
-        buildDropdown(
-          'Material',
-          ['Standard', 'Copper'],
-          data['material'],
-          (val) => setState(() => data['material'] = val),
-        ),
-      ],
-    );
-  }
-   // Sidewall/Endwall flashing -> mill finish / color finish
-  if (type == 'Sidewall/Endwall flashing') {
-    return buildDropdown(
-      'Finish',
-      ['Mill finish', 'Color finish'],
-      data['finish'],
-      (val) => setState(() => data['finish'] = val),
-    );
-  }
-  // L flashing -> Galvanized / Color finish
- if (type == 'L flashing') {
-  return buildDropdown(
-    'Material / Finish',
-    ['Galvanized', 'Color finish'],
-    data['material'],
-    (val) => setState(() => data['material'] = val),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: fields.map((field) {
+      return buildDropdown(
+        field.label,
+        field.options,
+        data[field.key],
+        (val) => setState(() => data[field.key] = val),
+      );
+    }).toList(),
   );
- }
-  // Chimney flashing -> small/average/large + Metal/Copper
-  if (type == 'Chimney flashing') {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildDropdown(
-          'Size',
-          ['Small', 'Average', 'Large'],
-          data['size'],
-          (val) => setState(() => data['size'] = val),
-        ),
-        buildDropdown(
-          'Material',
-          ['Metal', 'Copper'],
-          data['material'],
-          (val) => setState(() => data['material'] = val),
-        ),
-      ],
-    );
-  }
-  // Roof window step flashing kit -> standard/large
-  if (type == 'Roof window step flashing kit') {
-    return buildDropdown(
-      'Size',
-      ['Standard', 'Large'],
-      data['size'],
-      (val) => setState(() => data['size'] = val),
-    );
-  }
-  // Skylight flashing kit (dome) -> average/large + Standard/high grade
-  if (type == 'Skylight flashing kit (dome)') {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildDropdown(
-          'Size',
-          ['Average', 'Large'],
-          data['size'],
-          (val) => setState(() => data['size'] = val),
-        ),
-        buildDropdown(
-          'Grade',
-          ['Standard', 'High grade'],
-          data['grade'],
-          (val) => setState(() => data['grade'] = val),
-        ),
-      ],
-    );
-  }
-  return const SizedBox.shrink();
- }     
+}
+     
  // Paso adicional: preguntar por Rush Order ANTES de calcular precio / cobrar / enviar
  void _confirmRushAndSendToHfByEmail(File techPdf, File photoPdf) {
   bool rush = false;
