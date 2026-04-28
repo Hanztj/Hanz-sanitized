@@ -1016,7 +1016,6 @@ _formKey.currentState!.save();
     _currentFacetNameController.text = currentFacetData['facetName'] ?? '';
     _currentFacetOrientation = currentFacetData['facetOrientation'] ?? FacetOrientation.none;
     _currentFacetOverviewPhoto = currentFacetData['overviewPicture'];
-    _currentReferenceMeasuredController.text = currentFacetData['referenceMeasured'] ?? '';
     _currentHasRidgeVent = currentFacetData['hasRidgeVent'] ?? false;
     _currentRidgeVentType = currentFacetData['ridgeVentType'];
     _currentRidgeVentPhoto = currentFacetData['ridgeVentPhoto'];
