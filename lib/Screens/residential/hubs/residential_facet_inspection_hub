@@ -230,7 +230,7 @@ class ResidentialFacetInspectionHub extends StatelessWidget {
 
         ElevatedButton(
           onPressed: () => takePhoto(
-            'Overview Photo',
+            'Facet Overview Photo',
             isFacetPhoto: true,
             facetIndex: currentFacetIndex,
           ),
@@ -802,4 +802,3 @@ class ResidentialFacetInspectionHub extends StatelessWidget {
     );
   }
 }
-
